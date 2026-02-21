@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="WolverineGettingStarted.Tests/WolverineGettingStarted.Tests.csproj" />
+  <Project Path="WolverineGettingStarted/WolverineGettingStarted.csproj" />
+</Solution>

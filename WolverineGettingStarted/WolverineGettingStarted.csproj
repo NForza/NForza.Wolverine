@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="NForza.Wolverine.ValueTypes" Version="0.1.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.12.40" />
+    <PackageReference Include="WolverineFx.Http.Marten" Version="5.15.0" />
+  </ItemGroup>
+
+  <Target Name="StartPostgres" BeforeTargets="Build" Condition="'$(ASPNETCORE_ENVIRONMENT)' == 'Development' Or '$(Configuration)' == 'Debug'">
+    <Exec Command="docker compose -f $(SolutionDir)docker-compose.yml up -d" IgnoreExitCode="true" />
+  </Target>
+
+</Project>
