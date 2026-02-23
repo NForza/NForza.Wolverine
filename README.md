@@ -49,9 +49,9 @@ A reference implementation demonstrating event sourcing, CQRS, and real-time UI 
 | `IssuesAPI/IssuesAPI.Tests` | Integration tests using Alba and Wolverine message tracking |
 | `IssuesAPI.Reporting/IssuesAPI.Reporting` | Reporting service with RabbitMQ consumers and query endpoints |
 | `IssuesAPI.Reporting/IssuesAPI.Reporting.Tests` | Integration tests for handlers and endpoints |
-| `Wolverine.ValueTypes/src/NForza.Wolverine.ValueTypes` | Attributes and interfaces for strongly-typed value types |
-| `Wolverine.ValueTypes/src/NForza.Wolverine.ValueTypes.Generators` | C# source generator for value type record structs |
-| `Wolverine.ValueTypes/test/NForza.Wolverine.ValueTypes.Tests` | Source generator output verification tests |
+| `Wolverine.ValueTypes/src` | Attributes and interfaces for strongly-typed value types |
+| `Wolverine.ValueTypes/Generators` | C# source generator for value type record structs |
+| `Wolverine.ValueTypes/Tests` | Source generator output verification tests |
 | `Issues.UI` | Angular 21 SPA with SignalR real-time event display |
 
 ## Prerequisites
