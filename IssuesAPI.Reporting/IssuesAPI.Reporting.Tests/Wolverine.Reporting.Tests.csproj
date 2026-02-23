@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WolverineReporting\Wolverine.Reporting.csproj" />
+    <ProjectReference Include="..\IssuesAPI.Reporting\Wolverine.Reporting.csproj" />
   </ItemGroup>
 
 </Project>

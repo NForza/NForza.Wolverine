@@ -4,6 +4,7 @@ using Scalar.AspNetCore;
 using Wolverine;
 using Wolverine.Http;
 using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Hubs;
 using Wolverine.Issues.Users;
 using Wolverine.Marten;
 using Wolverine.RabbitMQ;
@@ -12,6 +13,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddWolverineHttp();
 builder.Services.AddOpenApi();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IssueEventBroadcaster>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 var connectionString = builder.Configuration.GetConnectionString("Issues")!;
 
@@ -42,8 +56,10 @@ builder.Host.UseWolverine(opts =>
 
 var app = builder.Build();
 
+app.UseCors();
 app.MapOpenApi();
 app.MapScalarApiReference();
+app.MapHub<IssuesHub>("/hub/issues");
 app.MapWolverineEndpoints();
 app.UseHttpsRedirection();
 

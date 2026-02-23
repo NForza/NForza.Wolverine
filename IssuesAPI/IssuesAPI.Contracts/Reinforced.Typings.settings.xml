@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <RtTargetDirectory>$(ProjectDir)..\..\Issues.UI\src\app\generated</RtTargetDirectory>
+    <RtDivideTypesAmongFiles>true</RtDivideTypesAmongFiles>
+    <RtConfigurationMethod>Wolverine.Issues.Contracts.ReinforcedTypingsConfiguration.Configure</RtConfigurationMethod>
+    <RtBypassTypeScriptcompilation>false</RtBypassTypeScriptcompilation>
+    <RtDisable>false</RtDisable>
+  </PropertyGroup>
+</Project>

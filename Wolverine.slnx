@@ -7,6 +7,6 @@
   <Project Path="IssuesAPI/IssuesAPI.Contracts/Wolverine.Issues.Contracts.csproj" />
   <Project Path="IssuesAPI/IssuesAPI.Tests/Wolverine.Issues.Tests.csproj" />
   <Project Path="IssuesAPI/IssuesAPI/Wolverine.Issues.csproj" />
-  <Project Path="Wolverine.Reporting/WolverineReporting/Wolverine.Reporting.csproj" />
-  <Project Path="Wolverine.Reporting/WolverineReporting.Tests/Wolverine.Reporting.Tests.csproj" />
+  <Project Path="IssuesAPI.Reporting/IssuesAPI.Reporting/Wolverine.Reporting.csproj" />
+  <Project Path="IssuesAPI.Reporting/IssuesAPI.Reporting.Tests/Wolverine.Reporting.Tests.csproj" />
 </Solution>

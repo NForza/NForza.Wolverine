@@ -1,5 +1,6 @@
 using Wolverine.Http;
 using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Hubs;
 using Wolverine.Issues.Issues.Model;
 using Wolverine.Marten;
 using WolverineGettingStarted.Issues.Model;
@@ -11,7 +12,7 @@ public record IssueCreatedResponse(IssueId Id, string Title, string Description)
 public static class CreateIssueEndpoint
 {
     [WolverinePost("/api/issues")]
-    public static (IssueCreatedResponse, IStartStream) Post(CreateIssue command)
+    public static (IssueCreatedResponse, IStartStream) Post(CreateIssue command, IssueEventBroadcaster broadcaster)
     {
         var created = new IssueCreated(
             new IssueId(),
@@ -22,6 +23,8 @@ public static class CreateIssueEndpoint
         );
 
         var startStream = MartenOps.StartStream<Issue>(created.Id.AsGuid(), created);
+
+        _ = broadcaster.Broadcast("IssueCreated", created);
 
         var response = new IssueCreatedResponse(created.Id, created.Title, created.Description);
 
