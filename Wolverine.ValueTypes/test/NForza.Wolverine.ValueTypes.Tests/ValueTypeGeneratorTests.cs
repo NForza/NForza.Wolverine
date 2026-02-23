@@ -26,8 +26,9 @@ public partial record struct CustomerId;
         recordSource.ShouldContain("IComparable<CustomerId>");
         recordSource.ShouldContain("Guid.NewGuid()");
         recordSource.ShouldContain("Guid.Empty");
-        recordSource.ShouldContain("implicit operator Guid");
+        recordSource.ShouldContain("explicit operator Guid");
         recordSource.ShouldContain("explicit operator CustomerId");
+        recordSource.ShouldContain("AsGuid()");
     }
 
     [Fact]
