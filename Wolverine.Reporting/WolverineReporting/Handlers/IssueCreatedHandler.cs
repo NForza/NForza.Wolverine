@@ -1,8 +1,8 @@
 using Marten;
-using WolverineGettingStarted.Issues;
-using WolverineReporting.Reports;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Reporting.Reports;
 
-namespace WolverineReporting.Handlers;
+namespace Wolverine.Reporting.Handlers;
 
 public static class IssueCreatedHandler
 {

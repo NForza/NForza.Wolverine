@@ -1,11 +1,12 @@
 <Solution>
   <Folder Name="/ValueTypes/">
-    <Project Path="Wolverine.ValueTypes/src/NForza.Wolverine.ValueTypes.Abstractions/NForza.Wolverine.ValueTypes.Abstractions.csproj" />
+    <Project Path="Wolverine.ValueTypes/src/NForza.Wolverine.ValueTypes/NForza.Wolverine.ValueTypes.csproj" />
     <Project Path="Wolverine.ValueTypes/src/NForza.Wolverine.ValueTypes.Generators/NForza.Wolverine.ValueTypes.Generators.csproj" />
+    <Project Path="Wolverine.ValueTypes/test/NForza.Wolverine.ValueTypes.Tests/NForza.Wolverine.ValueTypes.Tests.csproj" />
   </Folder>
-  <Project Path="Wolverine.GettingStarted/WolverineGettingStarted.Contracts/Wolverine.Issues.Contracts.csproj" />
-  <Project Path="Wolverine.GettingStarted/WolverineGettingStarted.Tests/Wolverine.Issues.Tests.csproj" />
-  <Project Path="Wolverine.GettingStarted/WolverineGettingStarted/Wolverine.Issues.csproj" />
+  <Project Path="IssuesAPI/IssuesAPI.Contracts/Wolverine.Issues.Contracts.csproj" />
+  <Project Path="IssuesAPI/IssuesAPI.Tests/Wolverine.Issues.Tests.csproj" />
+  <Project Path="IssuesAPI/IssuesAPI/Wolverine.Issues.csproj" />
   <Project Path="Wolverine.Reporting/WolverineReporting/Wolverine.Reporting.csproj" />
   <Project Path="Wolverine.Reporting/WolverineReporting.Tests/Wolverine.Reporting.Tests.csproj" />
 </Solution>

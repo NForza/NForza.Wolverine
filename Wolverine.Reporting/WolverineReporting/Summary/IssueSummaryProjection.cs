@@ -1,10 +1,10 @@
 using Marten.Events.Aggregation;
-using WolverineGettingStarted.Issues;
-using WolverineGettingStarted.Issues.Lifecycle;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Contracts.Issues.Lifecycle;
 using WolverineGettingStarted.Issues.Model;
 using WolverineGettingStarted.Users;
 
-namespace WolverineReporting.Summary;
+namespace Wolverine.Reporting.Summary;
 
 public class IssueSummary
 {

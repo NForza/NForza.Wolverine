@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="IssuesAPI.Tests/Wolverine.Issues.Tests.csproj" />
+  <Project Path="IssuesAPI/Wolverine.Issues.csproj" />
+  <Project Path="IssuesAPI.Contracts/Wolverine.Issues.Contracts.csproj" />
+</Solution>

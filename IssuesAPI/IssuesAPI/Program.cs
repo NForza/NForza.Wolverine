@@ -1,25 +1,24 @@
-using JasperFx.Events.Projections;
 using Marten;
 using NForza.Wolverine.ValueTypes;
 using Scalar.AspNetCore;
 using Wolverine;
 using Wolverine.Http;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Users;
 using Wolverine.Marten;
 using Wolverine.RabbitMQ;
-using Wolverine.Reporting.Summary;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddWolverineHttp();
 builder.Services.AddOpenApi();
 
-var connectionString = builder.Configuration.GetConnectionString("Reporting")!;
+var connectionString = builder.Configuration.GetConnectionString("Issues")!;
 
 builder.Services.AddMarten(opts =>
 {
     opts.Connection(connectionString);
-    opts.DatabaseSchemaName = "reporting";
-    opts.Projections.Add<IssueSummaryProjection>(ProjectionLifecycle.Inline);
+    opts.Schema.For<User>();
 })
 .IntegrateWithWolverine()
 .UseLightweightSessions();
@@ -34,7 +33,11 @@ builder.Host.UseWolverine(opts =>
         rabbit.HostName = builder.Configuration["RabbitMQ:HostName"] ?? "localhost";
     }).AutoProvision();
 
-    opts.ListenToRabbitQueue("issue-events-reporting");
+    opts.Publish(x =>
+    {
+        x.MessagesFromNamespaceContaining<IssueCreated>();
+        x.ToRabbitExchange("issue-events");
+    });
 });
 
 var app = builder.Build();

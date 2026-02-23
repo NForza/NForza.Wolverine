@@ -9,7 +9,7 @@
     <IsPackable>true</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <PackageId>NForza.Wolverine.ValueTypes</PackageId>
+    <PackageId>NForza.Wolverine.ValueTypes.Generators</PackageId>
     <Authors>NForza</Authors>
     <Description>Source generator for strongly-typed value type wrappers for Wolverine and Marten. Eliminates primitive obsession with a single attribute.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -22,8 +22,8 @@
 
   <ItemGroup>
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs/" />
-    <None Include="$(OutputPath)NForza.Wolverine.ValueTypes.Abstractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs/" />
-    <None Include="$(OutputPath)NForza.Wolverine.ValueTypes.Abstractions.dll" Pack="true" PackagePath="lib/netstandard2.0/" />
+    <None Include="$(OutputPath)NForza.Wolverine.ValueTypes.dll" Pack="true" PackagePath="analyzers/dotnet/cs/" />
+    <None Include="$(OutputPath)NForza.Wolverine.ValueTypes.dll" Pack="true" PackagePath="lib/netstandard2.0/" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NForza.Wolverine.ValueTypes.Abstractions\NForza.Wolverine.ValueTypes.Abstractions.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\NForza.Wolverine.ValueTypes\NForza.Wolverine.ValueTypes.csproj" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

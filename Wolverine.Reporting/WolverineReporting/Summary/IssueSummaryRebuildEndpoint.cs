@@ -1,7 +1,7 @@
 using Marten;
 using Wolverine.Http;
 
-namespace WolverineReporting.Summary;
+namespace Wolverine.Reporting.Summary;
 
 public static class IssueSummaryRebuildEndpoint
 {

@@ -8,14 +8,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
-    <ProjectReference Include="..\..\IssuesAPI\IssuesAPI.Contracts\Wolverine.Issues.Contracts.csproj" />
+    <ProjectReference Include="..\IssuesAPI.Contracts\Wolverine.Issues.Contracts.csproj" />
+    <ProjectReference Include="..\..\Wolverine.ValueTypes\src\NForza.Wolverine.ValueTypes.Generators\NForza.Wolverine.ValueTypes.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.12.46" />
     <PackageReference Include="WolverineFx.Http.Marten" Version="5.16.2" />
     <PackageReference Include="WolverineFx.RabbitMQ" Version="5.16.2" />
   </ItemGroup>
 
-  <Target Name="StartInfrastructure" BeforeTargets="Build" Condition="'$(ASPNETCORE_ENVIRONMENT)' == 'Development' Or '$(Configuration)' == 'Debug'">
-    <Exec Command="docker compose -f $(SolutionDir)IssuesAPI\docker-compose.yml up -d" IgnoreExitCode="true" />
+  <Target Name="StartPostgres" BeforeTargets="Build" Condition="'$(ASPNETCORE_ENVIRONMENT)' == 'Development' Or '$(Configuration)' == 'Debug'">
+    <Exec Command="docker compose -f $(SolutionDir)docker-compose.yml up -d" IgnoreExitCode="true" />
   </Target>
 
 </Project>

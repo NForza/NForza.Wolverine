@@ -1,6 +1,6 @@
 using Alba;
 
-namespace Wolverine.Reporting.Tests;
+namespace Wolverine.Issues.Tests;
 
 public class AppFixture : IAsyncLifetime
 {
@@ -10,12 +10,15 @@ public class AppFixture : IAsyncLifetime
     {
         Host = await AlbaHost.For<Program>(x =>
         {
-            x.ConfigureServices((_, services) =>
+            x.ConfigureServices((context, services) =>
             {
                 services.DisableAllExternalWolverineTransports();
             });
         });
     }
 
-    public async Task DisposeAsync() => await Host.DisposeAsync();
+    public async Task DisposeAsync()
+    {
+        await Host.DisposeAsync();
+    }
 }

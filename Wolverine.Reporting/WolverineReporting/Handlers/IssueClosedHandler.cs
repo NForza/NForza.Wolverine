@@ -1,8 +1,8 @@
 using Marten;
-using WolverineGettingStarted.Issues.Lifecycle;
-using WolverineReporting.Reports;
+using Wolverine.Issues.Contracts.Issues.Lifecycle;
+using Wolverine.Reporting.Reports;
 
-namespace WolverineReporting.Handlers;
+namespace Wolverine.Reporting.Handlers;
 
 public static class IssueClosedHandler
 {

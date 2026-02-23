@@ -3,37 +3,20 @@ using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Wolverine.Tracking;
 
-namespace WolverineReporting.Tests;
+namespace Wolverine.Reporting.Tests;
 
 [Collection("integration")]
-public abstract class IntegrationContext : IAsyncLifetime
+public abstract class IntegrationContext(AppFixture fixture) : IAsyncLifetime
 {
-    private readonly AppFixture _fixture;
+    public IAlbaHost Host => fixture.Host;
 
-    protected IntegrationContext(AppFixture fixture)
-    {
-        _fixture = fixture;
-    }
+    public IDocumentStore Store => Host.Services.GetRequiredService<IDocumentStore>();
 
-    public IAlbaHost Host => _fixture.Host;
-
-    public IDocumentStore Store =>
-        Host.Services.GetRequiredService<IDocumentStore>();
-
-    public async Task InitializeAsync()
-    {
-        await Store.Advanced.ResetAllData();
-    }
+    public async Task InitializeAsync() => await Store.Advanced.ResetAllData();
 
     public Task DisposeAsync() => Task.CompletedTask;
 
-    protected async Task<IScenarioResult> Scenario(Action<Scenario> configure)
-    {
-        return await Host.Scenario(configure);
-    }
+    protected async Task<IScenarioResult> Scenario(Action<Scenario> configure) => await Host.Scenario(configure);
 
-    protected async Task<ITrackedSession> SendMessage(object message)
-    {
-        return await Host.InvokeMessageAndWaitAsync(message);
-    }
+    protected async Task<ITrackedSession> SendMessage(object message) => await Host.InvokeMessageAndWaitAsync(message);
 }
