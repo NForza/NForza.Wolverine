@@ -23,6 +23,7 @@ public partial record struct {{Name}}(int Value) : IIntValueType, IComparable, I
     public static bool operator >=({{Name}} left, {{Name}} right) => left.CompareTo(right) >= 0;
     public static implicit operator int({{Name}} typedId) => typedId.Value;
     public static explicit operator {{Name}}(int value) => new(value);
+    public int AsInt() => Value;
     public bool IsValid() => {{ValidationBody}};
     public override string ToString() => Value.ToString();
 

@@ -20,6 +20,7 @@ public partial record struct {{Name}}(string Value) : IStringValueType
     public bool IsEmpty() => string.IsNullOrEmpty(Value);
     public static implicit operator string({{Name}} typedId) => typedId.Value;
     public static explicit operator {{Name}}(string value) => new(value);
+    public string AsString() => Value;
     public bool IsValid() => !string.IsNullOrEmpty(Value){{ValidationSuffix}};
     public override string ToString() => Value ?? string.Empty;
 

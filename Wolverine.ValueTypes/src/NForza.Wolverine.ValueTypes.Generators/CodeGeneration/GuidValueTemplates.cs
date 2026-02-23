@@ -20,6 +20,7 @@ public partial record struct {{Name}}(Guid Value) : IGuidValueType, IComparable<
     public static readonly {{Name}} Empty = new {{Name}}(Guid.Empty);
     public static explicit operator Guid({{Name}} typedId) => typedId.Value;
     public static explicit operator {{Name}}(Guid value) => new(value);
+    public Guid AsGuid() => Value;
     public override string ToString() => Value.ToString();
     public bool IsValid() => !Value.Equals(Guid.Empty);
     public int CompareTo({{Name}} other) => Value.CompareTo(other.Value);

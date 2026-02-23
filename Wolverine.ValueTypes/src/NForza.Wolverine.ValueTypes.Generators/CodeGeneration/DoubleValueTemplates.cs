@@ -24,6 +24,7 @@ public partial record struct {{Name}}(double Value) : IDoubleValueType, ICompara
     public static bool operator >=({{Name}} left, {{Name}} right) => left.CompareTo(right) >= 0;
     public static implicit operator double({{Name}} typedId) => typedId.Value;
     public static explicit operator {{Name}}(double value) => new(value);
+    public double AsDouble() => Value;
     public bool IsValid() => {{ValidationBody}};
     public override string ToString() => Value.ToString();
 

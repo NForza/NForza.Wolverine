@@ -19,7 +19,7 @@ public static class CreateIssueEndpoint
             DateTimeOffset.UtcNow
         );
 
-        var startStream = MartenOps.StartStream<Issue>(created.Id.Value, created);
+        var startStream = MartenOps.StartStream<Issue>(created.Id.AsGuid(), created);
 
         var response = new IssueCreatedResponse(created.Id, created.Title, created.Description);
 
