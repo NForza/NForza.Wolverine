@@ -1,7 +1,6 @@
 using Alba;
-using Wolverine;
 
-namespace WolverineReporting.Tests;
+namespace Wolverine.Reporting.Tests;
 
 public class AppFixture : IAsyncLifetime
 {
@@ -18,8 +17,5 @@ public class AppFixture : IAsyncLifetime
         });
     }
 
-    public async Task DisposeAsync()
-    {
-        await Host.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await Host.DisposeAsync();
 }

@@ -1,8 +1,9 @@
 using Marten;
 using Wolverine.Http;
-using WolverineGettingStarted.Issues.Model;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Issues.Model;
 
-namespace WolverineGettingStarted.Issues.Assignment;
+namespace Wolverine.Issues.Issues.Assignment;
 
 public static class AssignIssueEndpoint
 {

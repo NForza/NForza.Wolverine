@@ -1,7 +1,9 @@
-using WolverineGettingStarted.Issues.Lifecycle;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Contracts.Issues.Lifecycle;
+using WolverineGettingStarted.Issues.Model;
 using WolverineGettingStarted.Users;
 
-namespace WolverineGettingStarted.Issues.Model;
+namespace Wolverine.Issues.Issues.Model;
 
 public class Issue
 {

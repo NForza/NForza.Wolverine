@@ -1,8 +1,7 @@
-using Alba;
 using Shouldly;
-using WolverineGettingStarted.Users;
+using Wolverine.Issues.Users;
 
-namespace WolverineGettingStarted.Tests.Users;
+namespace Wolverine.Issues.Tests.Users;
 
 public class UserEndpointTests : IntegrationContext
 {

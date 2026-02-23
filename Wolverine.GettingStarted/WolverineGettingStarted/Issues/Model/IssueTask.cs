@@ -1,4 +1,6 @@
-namespace WolverineGettingStarted.Issues.Model;
+using WolverineGettingStarted.Issues.Model;
+
+namespace Wolverine.Issues.Issues.Model;
 
 public class IssueTask
 {

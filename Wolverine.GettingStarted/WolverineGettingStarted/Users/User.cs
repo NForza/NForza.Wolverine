@@ -1,4 +1,6 @@
-namespace WolverineGettingStarted.Users;
+using WolverineGettingStarted.Users;
+
+namespace Wolverine.Issues.Users;
 
 public class User
 {

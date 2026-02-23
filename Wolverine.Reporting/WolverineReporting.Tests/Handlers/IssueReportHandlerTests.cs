@@ -1,12 +1,12 @@
 using Marten;
 using Shouldly;
-using WolverineGettingStarted.Issues;
-using WolverineGettingStarted.Issues.Lifecycle;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Contracts.Issues.Lifecycle;
+using Wolverine.Reporting.Reports;
 using WolverineGettingStarted.Issues.Model;
 using WolverineGettingStarted.Users;
-using WolverineReporting.Reports;
 
-namespace WolverineReporting.Tests.Handlers;
+namespace Wolverine.Reporting.Tests.Handlers;
 
 public class IssueReportHandlerTests : IntegrationContext
 {

@@ -1,9 +1,10 @@
 using System.Net.Mail;
 using Marten;
-using WolverineGettingStarted.Issues.Model;
-using WolverineGettingStarted.Users;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Issues.Model;
+using Wolverine.Issues.Users;
 
-namespace WolverineGettingStarted.Issues;
+namespace Wolverine.Issues.Issues.Assignment;
 
 public static class UserAssignedHandler
 {

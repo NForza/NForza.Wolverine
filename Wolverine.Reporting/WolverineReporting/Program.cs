@@ -6,7 +6,7 @@ using Wolverine;
 using Wolverine.Http;
 using Wolverine.Marten;
 using Wolverine.RabbitMQ;
-using WolverineReporting.Summary;
+using Wolverine.Reporting.Summary;
 
 var builder = WebApplication.CreateBuilder(args);
 

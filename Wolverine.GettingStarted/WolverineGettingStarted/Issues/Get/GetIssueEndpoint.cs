@@ -1,8 +1,9 @@
 using Marten;
 using Wolverine.Http;
+using Wolverine.Issues.Issues.Model;
 using WolverineGettingStarted.Issues.Model;
 
-namespace WolverineGettingStarted.Issues.Get;
+namespace Wolverine.Issues.Issues.Get;
 
 public static class GetIssueEndpoint
 {

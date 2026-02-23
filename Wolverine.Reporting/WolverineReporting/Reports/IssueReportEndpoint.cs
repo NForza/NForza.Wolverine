@@ -2,7 +2,7 @@ using Marten;
 using Wolverine.Http;
 using WolverineGettingStarted.Issues.Model;
 
-namespace WolverineReporting.Reports;
+namespace Wolverine.Reporting.Reports;
 
 public static class IssueReportEndpoint
 {

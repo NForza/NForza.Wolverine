@@ -1,12 +1,14 @@
 using Marten;
 using Shouldly;
-using WolverineGettingStarted.Issues;
-using WolverineGettingStarted.Issues.Creation;
-using WolverineGettingStarted.Issues.Lifecycle;
-using WolverineGettingStarted.Issues.Model;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Contracts.Issues.Lifecycle;
+using Wolverine.Issues.Issues.Assignment;
+using Wolverine.Issues.Issues.Creation;
+using Wolverine.Issues.Issues.Lifecycle;
+using Wolverine.Issues.Issues.Model;
 using WolverineGettingStarted.Users;
 
-namespace WolverineGettingStarted.Tests.Issues;
+namespace Wolverine.Issues.Tests.Issues;
 
 public class IssueEndpointTests : IntegrationContext
 {

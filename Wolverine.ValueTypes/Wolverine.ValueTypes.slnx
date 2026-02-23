@@ -1,13 +1,9 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/NForza.Wolverine.ValueTypes.Abstractions/NForza.Wolverine.ValueTypes.Abstractions.csproj" />
+    <Project Path="src/NForza.Wolverine.ValueTypes/NForza.Wolverine.ValueTypes.csproj" />
     <Project Path="src/NForza.Wolverine.ValueTypes.Generators/NForza.Wolverine.ValueTypes.Generators.csproj" />
-  </Folder>
-  <Folder Name="/samples/">
-    <Project Path="samples/NForza.Wolverine.ValueTypes.Sample.WebApi/NForza.Wolverine.ValueTypes.Sample.WebApi.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/NForza.Wolverine.ValueTypes.Tests/NForza.Wolverine.ValueTypes.Tests.csproj" />
-    <Project Path="test/NForza.Wolverine.ValueTypes.Integration.Tests/NForza.Wolverine.ValueTypes.Integration.Tests.csproj" />
   </Folder>
 </Solution>

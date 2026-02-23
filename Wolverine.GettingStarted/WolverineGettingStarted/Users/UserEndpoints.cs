@@ -1,7 +1,8 @@
 using Marten;
 using Wolverine.Http;
+using WolverineGettingStarted.Users;
 
-namespace WolverineGettingStarted.Users;
+namespace Wolverine.Issues.Users;
 
 public record CreateUser(string Name, string Email);
 

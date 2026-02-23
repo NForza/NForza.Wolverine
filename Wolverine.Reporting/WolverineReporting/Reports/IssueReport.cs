@@ -1,7 +1,7 @@
 using WolverineGettingStarted.Issues.Model;
 using WolverineGettingStarted.Users;
 
-namespace WolverineReporting.Reports;
+namespace Wolverine.Reporting.Reports;
 
 public class IssueReport
 {

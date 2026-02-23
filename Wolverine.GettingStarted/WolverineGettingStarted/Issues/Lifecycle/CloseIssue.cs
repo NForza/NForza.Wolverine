@@ -1,5 +1,5 @@
 using WolverineGettingStarted.Issues.Model;
 
-namespace WolverineGettingStarted.Issues.Lifecycle;
+namespace Wolverine.Issues.Issues.Lifecycle;
 
 public record CloseIssue(IssueId IssueId);

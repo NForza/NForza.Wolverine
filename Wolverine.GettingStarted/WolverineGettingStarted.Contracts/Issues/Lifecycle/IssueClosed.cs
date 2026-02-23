@@ -1,5 +1,5 @@
 using WolverineGettingStarted.Issues.Model;
 
-namespace WolverineGettingStarted.Issues.Lifecycle;
+namespace Wolverine.Issues.Contracts.Issues.Lifecycle;
 
 public record IssueClosed(IssueId IssueId, DateTimeOffset Closed);

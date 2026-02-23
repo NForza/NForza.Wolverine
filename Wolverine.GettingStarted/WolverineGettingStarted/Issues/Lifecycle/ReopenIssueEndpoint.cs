@@ -1,8 +1,9 @@
 using Marten;
 using Wolverine.Http;
-using WolverineGettingStarted.Issues.Model;
+using Wolverine.Issues.Contracts.Issues.Lifecycle;
+using Wolverine.Issues.Issues.Model;
 
-namespace WolverineGettingStarted.Issues.Lifecycle;
+namespace Wolverine.Issues.Issues.Lifecycle;
 
 public static class ReopenIssueEndpoint
 {

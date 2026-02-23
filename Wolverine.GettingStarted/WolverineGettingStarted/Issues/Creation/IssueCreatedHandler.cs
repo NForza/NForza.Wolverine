@@ -1,8 +1,9 @@
 using System.Net.Mail;
 using Marten;
-using WolverineGettingStarted.Issues.Model;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Issues.Model;
 
-namespace WolverineGettingStarted.Issues;
+namespace Wolverine.Issues.Issues.Creation;
 
 public static class IssueCreatedHandler
 {

@@ -1,8 +1,6 @@
 using Alba;
-using Marten;
-using Wolverine;
 
-namespace WolverineGettingStarted.Tests;
+namespace Wolverine.Issues.Tests;
 
 public class AppFixture : IAsyncLifetime
 {

@@ -1,8 +1,10 @@
 using Wolverine.Http;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Issues.Model;
 using Wolverine.Marten;
 using WolverineGettingStarted.Issues.Model;
 
-namespace WolverineGettingStarted.Issues.Creation;
+namespace Wolverine.Issues.Issues.Creation;
 
 public record IssueCreatedResponse(IssueId Id, string Title, string Description);
 

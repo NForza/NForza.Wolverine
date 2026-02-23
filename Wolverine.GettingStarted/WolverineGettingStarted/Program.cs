@@ -3,10 +3,10 @@ using NForza.Wolverine.ValueTypes;
 using Scalar.AspNetCore;
 using Wolverine;
 using Wolverine.Http;
+using Wolverine.Issues.Contracts.Issues;
+using Wolverine.Issues.Users;
 using Wolverine.Marten;
 using Wolverine.RabbitMQ;
-using WolverineGettingStarted.Issues;
-using WolverineGettingStarted.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 

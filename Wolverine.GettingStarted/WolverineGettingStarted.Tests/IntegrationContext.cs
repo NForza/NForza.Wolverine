@@ -3,7 +3,7 @@ using Marten;
 using Microsoft.Extensions.DependencyInjection;
 using Wolverine.Tracking;
 
-namespace WolverineGettingStarted.Tests;
+namespace Wolverine.Issues.Tests;
 
 [Collection("integration")]
 public abstract class IntegrationContext : IAsyncLifetime
