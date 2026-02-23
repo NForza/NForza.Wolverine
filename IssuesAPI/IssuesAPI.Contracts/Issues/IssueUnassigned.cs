@@ -3,4 +3,4 @@ using WolverineGettingStarted.Users;
 
 namespace Wolverine.Issues.Contracts.Issues;
 
-public record IssueAssigned(IssueId IssueId, UserId AssigneeId, string Title);
+public record IssueUnassigned(IssueId IssueId, UserId AssigneeId);

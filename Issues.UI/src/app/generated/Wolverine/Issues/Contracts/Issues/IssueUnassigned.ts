@@ -1,8 +1,7 @@
 export namespace Wolverine.Issues.Contracts.Issues {
-	export interface IssueAssigned
+	export interface IssueUnassigned
 	{
 		issueId: string;
 		assigneeId: string;
-		title: string;
 	}
 }

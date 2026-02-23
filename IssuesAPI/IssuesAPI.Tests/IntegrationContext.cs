@@ -6,40 +6,26 @@ using Wolverine.Tracking;
 namespace Wolverine.Issues.Tests;
 
 [Collection("integration")]
-public abstract class IntegrationContext : IAsyncLifetime
+public abstract class IntegrationContext(AppFixture fixture) : IAsyncLifetime
 {
-    private readonly AppFixture _fixture;
+    public IAlbaHost Host => fixture.Host;
 
-    protected IntegrationContext(AppFixture fixture)
-    {
-        _fixture = fixture;
-    }
-
-    public IAlbaHost Host => _fixture.Host;
-
-    public IDocumentStore Store =>
-        Host.Services.GetRequiredService<IDocumentStore>();
+    public IDocumentStore Store
+        => Host.Services.GetRequiredService<IDocumentStore>();
 
     public async Task InitializeAsync()
-    {
-        await Store.Advanced.ResetAllData();
-    }
+        => await Store.Advanced.ResetAllData();
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    public Task DisposeAsync()
+        => Task.CompletedTask;
 
     protected async Task<IScenarioResult> Scenario(Action<Scenario> configure)
-    {
-        return await Host.Scenario(configure);
-    }
+        => await Host.Scenario(configure);
 
-    protected async Task<(ITrackedSession, IScenarioResult)> TrackedHttpCall(
-        Action<Scenario> configure)
+    protected async Task<(ITrackedSession, IScenarioResult)> TrackedHttpCall(Action<Scenario> configure)
     {
         IScenarioResult result = null!;
-        var tracked = await Host.ExecuteAndWaitAsync(async () =>
-        {
-            result = await Host.Scenario(configure);
-        });
+        var tracked = await Host.ExecuteAndWaitAsync(async () => result = await Host.Scenario(configure));
         return (tracked, result);
     }
 }

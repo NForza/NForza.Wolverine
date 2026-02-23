@@ -10,10 +10,8 @@ using WolverineGettingStarted.Users;
 
 namespace Wolverine.Issues.Tests.Issues;
 
-public class IssueEndpointTests : IntegrationContext
+public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture)
 {
-    public IssueEndpointTests(AppFixture fixture) : base(fixture) { }
-
     [Fact]
     public async Task should_create_an_issue()
     {

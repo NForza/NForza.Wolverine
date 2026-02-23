@@ -3,10 +3,8 @@ using Wolverine.Issues.Users;
 
 namespace Wolverine.Issues.Tests.Users;
 
-public class UserEndpointTests : IntegrationContext
+public class UserEndpointTests(AppFixture fixture) : IntegrationContext(fixture)
 {
-    public UserEndpointTests(AppFixture fixture) : base(fixture) { }
-
     [Fact]
     public async Task should_create_a_user()
     {
@@ -28,24 +26,18 @@ public class UserEndpointTests : IntegrationContext
     [Fact]
     public async Task should_get_a_user()
     {
-        // Arrange: create a user first
         var command = new CreateUser("Jane Doe", "jane@example.com");
 
-        var createResult = await Scenario(x =>
-        {
-            x.Post.Json(command).ToUrl("/users");
-        });
+        var createResult = await Scenario(x => x.Post.Json(command).ToUrl("/users"));
 
         var created = createResult.ReadAsJson<User>()!;
 
-        // Act: retrieve the user
         var getResult = await Scenario(x =>
         {
             x.Get.Url($"/users/{created.Id}");
             x.StatusCodeShouldBe(200);
         });
 
-        // Assert
         var user = getResult.ReadAsJson<User>();
         user.ShouldNotBeNull();
         user.Name.ShouldBe("Jane Doe");

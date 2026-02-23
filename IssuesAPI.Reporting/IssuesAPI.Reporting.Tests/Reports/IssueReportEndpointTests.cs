@@ -1,3 +1,5 @@
+using Marten;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Wolverine.Issues.Contracts.Issues;
 using Wolverine.Reporting.Reports;
@@ -10,39 +12,69 @@ public class IssueReportEndpointTests : IntegrationContext
 {
     public IssueReportEndpointTests(AppFixture fixture) : base(fixture) { }
 
+    private async Task AppendEvents(IssueId issueId, params object[] events)
+    {
+        await using var session = Host.Services.GetRequiredService<IDocumentStore>().LightweightSession();
+        session.Events.StartStream<AssigneeIssueReport>(issueId.AsGuid(), events);
+        await session.SaveChangesAsync();
+    }
+
+    private async Task AppendToStream(IssueId issueId, params object[] events)
+    {
+        await using var session = Host.Services.GetRequiredService<IDocumentStore>().LightweightSession();
+        session.Events.Append(issueId.AsGuid(), events);
+        await session.SaveChangesAsync();
+    }
+
     [Fact]
     public async Task should_get_all_reports()
     {
-        await SendMessage(new IssueCreated(new IssueId(), new UserId(), "Report 1", "Desc 1", DateTimeOffset.UtcNow));
-        await SendMessage(new IssueCreated(new IssueId(), new UserId(), "Report 2", "Desc 2", DateTimeOffset.UtcNow));
+        var issueId1 = new IssueId();
+        var issueId2 = new IssueId();
+        var assigneeId1 = new UserId();
+        var assigneeId2 = new UserId();
+
+        await AppendEvents(issueId1,
+            new IssueCreated(issueId1, new UserId(), "Report 1", "Desc 1", DateTimeOffset.UtcNow));
+        await AppendToStream(issueId1,
+            new IssueAssigned(issueId1, assigneeId1, "Report 1"));
+
+        await AppendEvents(issueId2,
+            new IssueCreated(issueId2, new UserId(), "Report 2", "Desc 2", DateTimeOffset.UtcNow));
+        await AppendToStream(issueId2,
+            new IssueAssigned(issueId2, assigneeId2, "Report 2"));
 
         var result = await Scenario(x =>
         {
-            x.Get.Url("/reports/issues");
+            x.Get.Url("/reports/assignees");
             x.StatusCodeShouldBe(200);
         });
 
-        var reports = result.ReadAsJson<List<IssueReport>>();
+        var reports = result.ReadAsJson<List<AssigneeIssueReport>>();
         reports.ShouldNotBeNull();
         reports.Count.ShouldBeGreaterThanOrEqualTo(2);
     }
 
     [Fact]
-    public async Task should_get_report_by_id()
+    public async Task should_get_report_by_assignee_id()
     {
         var issueId = new IssueId();
+        var assigneeId = new UserId();
 
-        await SendMessage(new IssueCreated(
-            issueId, new UserId(), "Specific report", "Desc", DateTimeOffset.UtcNow));
+        await AppendEvents(issueId,
+            new IssueCreated(issueId, new UserId(), "Specific report", "Desc", DateTimeOffset.UtcNow));
+        await AppendToStream(issueId,
+            new IssueAssigned(issueId, assigneeId, "Specific report"));
 
         var result = await Scenario(x =>
         {
-            x.Get.Url($"/reports/issues/{issueId}");
+            x.Get.Url($"/reports/assignees/{assigneeId}");
             x.StatusCodeShouldBe(200);
         });
 
-        var report = result.ReadAsJson<IssueReport>();
+        var report = result.ReadAsJson<AssigneeIssueReport>();
         report.ShouldNotBeNull();
-        report.Title.ShouldBe("Specific report");
+        report.Issues.Count.ShouldBe(1);
+        report.Issues[0].Title.ShouldBe("Specific report");
     }
 }

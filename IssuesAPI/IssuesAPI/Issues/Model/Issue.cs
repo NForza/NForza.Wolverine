@@ -29,18 +29,11 @@ public class Issue
         OpenedAt = created.OpenedAt;
     }
 
-    public void Apply(IssueAssigned assigned)
-    {
-        AssigneeId = assigned.AssigneeId;
-    }
+    public void Apply(IssueUnassigned unassigned) => AssigneeId = null;
 
-    public void Apply(IssueClosed closed)
-    {
-        IsOpen = false;
-    }
+    public void Apply(IssueAssigned assigned) => AssigneeId = assigned.AssigneeId;
 
-    public void Apply(IssueOpened opened)
-    {
-        IsOpen = true;
-    }
+    public void Apply(IssueClosed closed) => IsOpen = false;
+
+    public void Apply(IssueOpened opened) => IsOpen = true;
 }

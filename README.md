@@ -22,7 +22,7 @@ A reference implementation demonstrating event sourcing, CQRS, and real-time UI 
 |  Transactional Outbox       |       |  RabbitMQ Consumer          |
 +-------------+---------------+       +-------------+---------------+
               |                                     |
-              |  RabbitMQ (issue-events exchange)    |
+              |  RabbitMQ (conventional routing)     |
               +------------------------------------>+
               |
       +-------+--------+
@@ -34,7 +34,7 @@ A reference implementation demonstrating event sourcing, CQRS, and real-time UI 
       +--------+--------+
 ```
 
-**IssuesAPI** is the write side: it accepts commands, appends domain events to Marten event streams, publishes them to RabbitMQ via Wolverine's transactional outbox, and broadcasts them to the Angular UI over SignalR.
+**IssuesAPI** is the write side: it accepts commands, appends domain events to Marten event streams, and publishes them to RabbitMQ via Wolverine's transactional outbox. A Wolverine handler consumes these events back from RabbitMQ and broadcasts them to the Angular UI over SignalR.
 
 **IssuesAPI.Reporting** is the read side: it consumes events from RabbitMQ, builds denormalized read models, and exposes query endpoints.
 
@@ -159,9 +159,10 @@ Each generates: record struct, JSON converter, `TryParse`, comparison operators,
 
 | Method | Route | Description |
 |---|---|---|
-| `GET` | `/reports/issues` | List all issue reports |
-| `GET` | `/reports/issues/{id}` | Get a specific issue report |
+| `GET` | `/reports/assignees` | List all assignee issue reports |
+| `GET` | `/reports/assignees/{userId}` | Get issues assigned to a specific user |
 | `GET` | `/issues/{id}/summary` | Get an issue summary (inline projection) |
+| `POST` | `/admin/projections/issue-report/rebuild` | Rebuild the assignee issue report projection |
 | `POST` | `/admin/projections/issue-summary/rebuild` | Rebuild the summary projection |
 
 ## Key Patterns
@@ -178,11 +179,9 @@ builder.Services.AddMarten(opts => { ... })
 builder.Host.UseWolverine(opts =>
 {
     opts.Policies.AutoApplyTransactions(); // wraps handlers in transactions
-    opts.Publish(x =>
-    {
-        x.MessagesFromNamespaceContaining<IssueCreated>();
-        x.ToRabbitExchange("issue-events");
-    });
+    opts.UseRabbitMq(rabbit => { ... })
+        .UseConventionalRouting()    // exchange per message type, queue per consumer
+        .AutoProvision();
 });
 ```
 
@@ -196,7 +195,7 @@ var startStream = MartenOps.StartStream<Issue>(created.Id.AsGuid(), created);
 
 // Mutate: appends to an existing stream
 var stream = await session.Events.FetchForWriting<Issue>(command.IssueId);
-stream.AppendOne(new IssueClosed(stream.Aggregate!.Id, DateTimeOffset.UtcNow));
+stream.AppendOne(new IssueClosed(stream.Aggregate!.Id, stream.Aggregate!.AssigneeId ?? default, DateTimeOffset.UtcNow));
 ```
 
 ### CQRS via Separate Services
@@ -208,17 +207,21 @@ The write side (IssuesAPI) and read side (Reporting) are separate services with 
 
 ### Real-Time Updates via SignalR
 
-Endpoints broadcast events to all connected Angular clients through `IssueEventBroadcaster`:
+Events flow from the Marten outbox through RabbitMQ back into the application, where a Wolverine handler forwards them to SignalR:
 
 ```csharp
-public class IssueEventBroadcaster(IHubContext<IssuesHub> hub)
+public class IssueEventSignalRBridge(IHubContext<IssuesHub> hub)
 {
-    public Task Broadcast(string eventType, object data) =>
+    public Task Handle(IssueCreated @event) => Broadcast(nameof(IssueCreated), @event);
+    public Task Handle(IssueAssigned @event) => Broadcast(nameof(IssueAssigned), @event);
+    // ...
+
+    private Task Broadcast(string eventType, object data) =>
         hub.Clients.All.SendAsync("IssueEvent", new { eventType, data });
 }
 ```
 
-The Angular UI receives these via the `@microsoft/signalr` client and updates a reactive signal store.
+With `UseConventionalRouting()`, Wolverine automatically creates exchanges per message type and a queue for this handler — no manual wiring needed. The Angular UI receives events via the `@microsoft/signalr` client and updates a reactive signal store.
 
 ### TypeScript Generation
 
