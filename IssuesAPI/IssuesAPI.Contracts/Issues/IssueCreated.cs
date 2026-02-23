@@ -8,5 +8,5 @@ public record IssueCreated(
     UserId OriginatorId,
     string Title,
     string Description,
-    DateTimeOffset Opened
+    DateTimeOffset OpenedAt
 );

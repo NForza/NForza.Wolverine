@@ -15,8 +15,8 @@ public static class IssueCreatedHandler
             Description = @event.Description,
             OriginatorId = @event.OriginatorId,
             Status = "Open",
-            Created = @event.Opened,
-            LastUpdated = @event.Opened,
+            Created = @event.OpenedAt,
+            LastUpdated = @event.OpenedAt,
             EventCount = 1
         });
     }

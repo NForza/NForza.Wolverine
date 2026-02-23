@@ -26,7 +26,7 @@ public class IssueSummaryProjection : SingleStreamProjection<IssueSummary, Issue
             Id = @event.Id,
             Title = @event.Title,
             Status = "Open",
-            Created = @event.Opened,
+            Created = @event.OpenedAt,
             EventCount = 1
         };
     }
