@@ -11,7 +11,7 @@ public record IssueCreatedResponse(IssueId Id, string Title, string Description)
 
 public static class CreateIssueEndpoint
 {
-    [WolverinePost("/api/issues")]
+    [WolverinePost("/issues")]
     public static (IssueCreatedResponse, IStartStream) Post(CreateIssue command, IssueEventBroadcaster broadcaster)
     {
         var created = new IssueCreated(

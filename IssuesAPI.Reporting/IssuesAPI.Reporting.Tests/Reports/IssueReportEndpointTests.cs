@@ -18,7 +18,7 @@ public class IssueReportEndpointTests : IntegrationContext
 
         var result = await Scenario(x =>
         {
-            x.Get.Url("/api/reports/issues");
+            x.Get.Url("/reports/issues");
             x.StatusCodeShouldBe(200);
         });
 
@@ -37,7 +37,7 @@ public class IssueReportEndpointTests : IntegrationContext
 
         var result = await Scenario(x =>
         {
-            x.Get.Url($"/api/reports/issues/{issueId}");
+            x.Get.Url($"/reports/issues/{issueId}");
             x.StatusCodeShouldBe(200);
         });
 

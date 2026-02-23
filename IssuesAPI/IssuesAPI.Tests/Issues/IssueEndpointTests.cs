@@ -25,7 +25,7 @@ public class IssueEndpointTests : IntegrationContext
 
         var (tracked, result) = await TrackedHttpCall(x =>
         {
-            x.Post.Json(command).ToUrl("/api/issues");
+            x.Post.Json(command).ToUrl("/issues");
             x.StatusCodeShouldBe(200);
         });
 
@@ -48,7 +48,7 @@ public class IssueEndpointTests : IntegrationContext
 
         var (_, createResult) = await TrackedHttpCall(x =>
         {
-            x.Post.Json(command).ToUrl("/api/issues");
+            x.Post.Json(command).ToUrl("/issues");
         });
 
         var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
@@ -61,7 +61,7 @@ public class IssueEndpointTests : IntegrationContext
         // Act: retrieve the issue via GET
         var getResult = await Scenario(x =>
         {
-            x.Get.Url($"/api/issues/{created.Id}");
+            x.Get.Url($"/issues/{created.Id}");
             x.StatusCodeShouldBe(200);
         });
 
@@ -85,7 +85,7 @@ public class IssueEndpointTests : IntegrationContext
 
         var (_, createResult) = await TrackedHttpCall(x =>
         {
-            x.Post.Json(createCommand).ToUrl("/api/issues");
+            x.Post.Json(createCommand).ToUrl("/issues");
         });
 
         var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
@@ -96,7 +96,7 @@ public class IssueEndpointTests : IntegrationContext
 
         await TrackedHttpCall(x =>
         {
-            x.Put.Json(assignCommand).ToUrl($"/api/issues/{created.Id}/assign");
+            x.Put.Json(assignCommand).ToUrl($"/issues/{created.Id}/assign");
             x.StatusCodeShouldBe(204);
         });
 
@@ -116,7 +116,7 @@ public class IssueEndpointTests : IntegrationContext
 
         var (_, createResult) = await TrackedHttpCall(x =>
         {
-            x.Post.Json(createCommand).ToUrl("/api/issues");
+            x.Post.Json(createCommand).ToUrl("/issues");
         });
 
         var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
@@ -125,7 +125,7 @@ public class IssueEndpointTests : IntegrationContext
         await TrackedHttpCall(x =>
         {
             x.Put.Json(new AssignIssue(created.Id, assigneeId))
-                .ToUrl($"/api/issues/{created.Id}/assign");
+                .ToUrl($"/issues/{created.Id}/assign");
             x.StatusCodeShouldBe(204);
         });
 
@@ -161,7 +161,7 @@ public class IssueEndpointTests : IntegrationContext
         var (_, createResult) = await TrackedHttpCall(x =>
         {
             x.Post.Json(new CreateIssue(new UserId(), "Close me", "Will be closed"))
-                .ToUrl("/api/issues");
+                .ToUrl("/issues");
         });
 
         var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
@@ -169,7 +169,7 @@ public class IssueEndpointTests : IntegrationContext
         await TrackedHttpCall(x =>
         {
             x.Put.Json(new CloseIssue(created.Id))
-                .ToUrl($"/api/issues/{created.Id}/close");
+                .ToUrl($"/issues/{created.Id}/close");
             x.StatusCodeShouldBe(204);
         });
 
@@ -185,7 +185,7 @@ public class IssueEndpointTests : IntegrationContext
         var (_, createResult) = await TrackedHttpCall(x =>
         {
             x.Post.Json(new CreateIssue(new UserId(), "Reopen me", "Will be reopened"))
-                .ToUrl("/api/issues");
+                .ToUrl("/issues");
         });
 
         var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
@@ -194,7 +194,7 @@ public class IssueEndpointTests : IntegrationContext
         await TrackedHttpCall(x =>
         {
             x.Put.Json(new CloseIssue(created.Id))
-                .ToUrl($"/api/issues/{created.Id}/close");
+                .ToUrl($"/issues/{created.Id}/close");
             x.StatusCodeShouldBe(204);
         });
 
@@ -202,7 +202,7 @@ public class IssueEndpointTests : IntegrationContext
         await TrackedHttpCall(x =>
         {
             x.Put.Json(new ReopenIssue(created.Id))
-                .ToUrl($"/api/issues/{created.Id}/reopen");
+                .ToUrl($"/issues/{created.Id}/reopen");
             x.StatusCodeShouldBe(204);
         });
 

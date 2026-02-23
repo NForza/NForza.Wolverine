@@ -9,7 +9,7 @@ namespace Wolverine.Issues.Issues.Lifecycle;
 public static class ReopenIssueEndpoint
 {
     [EmptyResponse]
-    [WolverinePut("/api/issues/{issueId}/reopen")]
+    [WolverinePut("/issues/{issueId}/reopen")]
     public static async Task Reopen(ReopenIssue command, IDocumentSession session, IssueEventBroadcaster broadcaster)
     {
         var stream = await session.Events.FetchForWriting<Issue>(command.IssueId);

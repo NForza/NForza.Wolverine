@@ -60,6 +60,7 @@ app.UseCors();
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.MapHub<IssuesHub>("/hub/issues");
+app.MapGet("/", () => Results.Redirect("/scalar/v1"));
 app.MapWolverineEndpoints();
 app.UseHttpsRedirection();
 

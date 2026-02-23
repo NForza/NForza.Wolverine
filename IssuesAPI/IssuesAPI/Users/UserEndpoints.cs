@@ -8,7 +8,7 @@ public record CreateUser(string Name, string Email);
 
 public static class UserEndpoints
 {
-    [WolverinePost("/api/users")]
+    [WolverinePost("/users")]
     public static async Task<User> CreateUser(CreateUser command, IDocumentSession session)
     {
         var user = new User
@@ -24,7 +24,7 @@ public static class UserEndpoints
         return user;
     }
 
-    [WolverineGet("/api/users/{id}")]
+    [WolverineGet("/users/{id}")]
     public static Task<User?> GetUser(UserId id, IQuerySession session)
     {
         return session.Query<User>().Where(u => u.Id == id).FirstOrDefaultAsync();

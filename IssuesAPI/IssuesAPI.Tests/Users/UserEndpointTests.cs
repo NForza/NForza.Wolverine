@@ -14,7 +14,7 @@ public class UserEndpointTests : IntegrationContext
 
         var result = await Scenario(x =>
         {
-            x.Post.Json(command).ToUrl("/api/users");
+            x.Post.Json(command).ToUrl("/users");
             x.StatusCodeShouldBe(200);
         });
 
@@ -33,7 +33,7 @@ public class UserEndpointTests : IntegrationContext
 
         var createResult = await Scenario(x =>
         {
-            x.Post.Json(command).ToUrl("/api/users");
+            x.Post.Json(command).ToUrl("/users");
         });
 
         var created = createResult.ReadAsJson<User>()!;
@@ -41,7 +41,7 @@ public class UserEndpointTests : IntegrationContext
         // Act: retrieve the user
         var getResult = await Scenario(x =>
         {
-            x.Get.Url($"/api/users/{created.Id}");
+            x.Get.Url($"/users/{created.Id}");
             x.StatusCodeShouldBe(200);
         });
 

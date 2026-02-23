@@ -9,7 +9,7 @@ namespace Wolverine.Issues.Issues.Assignment;
 public static class AssignIssueEndpoint
 {
     [EmptyResponse]
-    [WolverinePut("/api/issues/{issueId}/assign")]
+    [WolverinePut("/issues/{issueId}/assign")]
     public static async Task Assign(AssignIssue command, IDocumentSession session, IssueEventBroadcaster broadcaster)
     {
         var stream = await session.Events.FetchForWriting<Issue>(command.IssueId);
