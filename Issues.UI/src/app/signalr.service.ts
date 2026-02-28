@@ -21,12 +21,15 @@ export class SignalRService {
       .configureLogging(LogLevel.Information)
       .build();
 
-    this.connection.on('IssueEvent', (envelope: { eventType: string; data: Record<string, unknown> }) => {
-      this.events.update(current => [
-        { eventType: envelope.eventType, data: envelope.data, receivedAt: new Date() },
-        ...current,
-      ]);
-    });
+    const eventTypes = ['IssueCreated', 'IssueAssigned', 'IssueUnassigned', 'IssueClosed', 'IssueOpened'];
+    for (const eventType of eventTypes) {
+      this.connection.on(eventType, (data: Record<string, unknown>) => {
+        this.events.update(current => [
+          { eventType, data, receivedAt: new Date() },
+          ...current,
+        ]);
+      });
+    }
 
     this.connection.onclose(() => this.connected.set(false));
     this.connection.onreconnected(() => this.connected.set(true));

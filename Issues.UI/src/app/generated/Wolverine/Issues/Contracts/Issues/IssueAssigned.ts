@@ -3,6 +3,7 @@ export namespace Wolverine.Issues.Contracts.Issues {
 	{
 		issueId: string;
 		assigneeId: string;
+		assigneeName: string;
 		title: string;
 	}
 }

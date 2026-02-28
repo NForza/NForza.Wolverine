@@ -3,6 +3,7 @@ export namespace Wolverine.Issues.Contracts.Issues {
 	{
 		id: string;
 		originatorId: string;
+		originatorName: string;
 		title: string;
 		description: string;
 		openedAt: string;

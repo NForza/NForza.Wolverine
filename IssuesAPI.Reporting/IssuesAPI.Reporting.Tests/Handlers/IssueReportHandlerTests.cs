@@ -34,9 +34,9 @@ public class IssueReportProjectionTests : IntegrationContext
         var assigneeId = new UserId();
 
         await AppendEvents(issueId,
-            new IssueCreated(issueId, new UserId(), "Test Issue", "Test Description", DateTimeOffset.UtcNow));
+            new IssueCreated(issueId, new UserId(), "Originator", "Test Issue", "Test Description", DateTimeOffset.UtcNow));
         await AppendToStream(issueId,
-            new IssueAssigned(issueId, assigneeId, "Test Issue"));
+            new IssueAssigned(issueId, assigneeId, "Assignee", "Test Issue"));
 
         await using var session = Store.QuerySession();
         var report = await session.Query<AssigneeIssueReport>()
@@ -56,9 +56,9 @@ public class IssueReportProjectionTests : IntegrationContext
         var assigneeId = new UserId();
 
         await AppendEvents(issueId,
-            new IssueCreated(issueId, new UserId(), "Close test", "Desc", DateTimeOffset.UtcNow));
+            new IssueCreated(issueId, new UserId(), "Originator", "Close test", "Desc", DateTimeOffset.UtcNow));
         await AppendToStream(issueId,
-            new IssueAssigned(issueId, assigneeId, "Close test"));
+            new IssueAssigned(issueId, assigneeId, "Assignee", "Close test"));
         await AppendToStream(issueId,
             new IssueClosed(issueId, assigneeId, DateTimeOffset.UtcNow));
 
@@ -77,9 +77,9 @@ public class IssueReportProjectionTests : IntegrationContext
         var assigneeId = new UserId();
 
         await AppendEvents(issueId,
-            new IssueCreated(issueId, new UserId(), "Reopen test", "Desc", DateTimeOffset.UtcNow));
+            new IssueCreated(issueId, new UserId(), "Originator", "Reopen test", "Desc", DateTimeOffset.UtcNow));
         await AppendToStream(issueId,
-            new IssueAssigned(issueId, assigneeId, "Reopen test"));
+            new IssueAssigned(issueId, assigneeId, "Assignee", "Reopen test"));
         await AppendToStream(issueId,
             new IssueClosed(issueId, assigneeId, DateTimeOffset.UtcNow.AddMinutes(-1)));
         await AppendToStream(issueId,
@@ -101,14 +101,14 @@ public class IssueReportProjectionTests : IntegrationContext
         var assigneeId = new UserId();
 
         await AppendEvents(issueId1,
-            new IssueCreated(issueId1, new UserId(), "Issue 1", "Desc", DateTimeOffset.UtcNow));
+            new IssueCreated(issueId1, new UserId(), "Originator", "Issue 1", "Desc", DateTimeOffset.UtcNow));
         await AppendToStream(issueId1,
-            new IssueAssigned(issueId1, assigneeId, "Issue 1"));
+            new IssueAssigned(issueId1, assigneeId, "Assignee", "Issue 1"));
 
         await AppendEvents(issueId2,
-            new IssueCreated(issueId2, new UserId(), "Issue 2", "Desc", DateTimeOffset.UtcNow));
+            new IssueCreated(issueId2, new UserId(), "Originator", "Issue 2", "Desc", DateTimeOffset.UtcNow));
         await AppendToStream(issueId2,
-            new IssueAssigned(issueId2, assigneeId, "Issue 2"));
+            new IssueAssigned(issueId2, assigneeId, "Assignee", "Issue 2"));
 
         await using var session = Store.QuerySession();
         var report = await session.Query<AssigneeIssueReport>()
@@ -128,13 +128,13 @@ public class IssueReportProjectionTests : IntegrationContext
         var assigneeB = new UserId();
 
         await AppendEvents(issueId,
-            new IssueCreated(issueId, new UserId(), "Reassign test", "Desc", DateTimeOffset.UtcNow));
+            new IssueCreated(issueId, new UserId(), "Originator", "Reassign test", "Desc", DateTimeOffset.UtcNow));
         await AppendToStream(issueId,
-            new IssueAssigned(issueId, assigneeA, "Reassign test"));
+            new IssueAssigned(issueId, assigneeA, "Assignee A", "Reassign test"));
         await AppendToStream(issueId,
             new IssueUnassigned(issueId, assigneeA));
         await AppendToStream(issueId,
-            new IssueAssigned(issueId, assigneeB, "Reassign test"));
+            new IssueAssigned(issueId, assigneeB, "Assignee B", "Reassign test"));
 
         await using var session = Store.QuerySession();
 
@@ -159,9 +159,9 @@ public class IssueReportProjectionTests : IntegrationContext
         var created = DateTimeOffset.UtcNow;
 
         await AppendEvents(issueId,
-            new IssueCreated(issueId, new UserId(), "Lifecycle test", "Full lifecycle", created));
+            new IssueCreated(issueId, new UserId(), "Originator", "Lifecycle test", "Full lifecycle", created));
         await AppendToStream(issueId,
-            new IssueAssigned(issueId, assigneeId, "Lifecycle test"));
+            new IssueAssigned(issueId, assigneeId, "Assignee", "Lifecycle test"));
         await AppendToStream(issueId,
             new IssueClosed(issueId, assigneeId, created.AddHours(1)));
         await AppendToStream(issueId,
