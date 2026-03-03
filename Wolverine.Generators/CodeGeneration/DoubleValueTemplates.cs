@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using System.Globalization;
 
-namespace NForza.Wolverine.ValueTypes.Generators.CodeGeneration;
+namespace NForza.Wolverine.Generators.CodeGeneration;
 
-internal static class IntValueTemplates
+internal static class DoubleValueTemplates
 {
     private const string RecordStructTemplate = @"#nullable enable
 using System;
@@ -13,7 +14,7 @@ using NForza.Wolverine.ValueTypes;
 {{NamespaceDeclaration}}
 [JsonConverter(typeof({{Name}}JsonConverter))]
 [DebuggerDisplay(""{Value}"")]
-public partial record struct {{Name}}(int Value) : IIntValueType, IComparable, IComparable<{{Name}}>, IEquatable<{{Name}}>
+public partial record struct {{Name}}(double Value) : IDoubleValueType, IComparable, IComparable<{{Name}}>, IEquatable<{{Name}}>
 {
     public int CompareTo(object? other) => other is {{Name}} ? Value.CompareTo((({{Name}})other).Value) : -1;
     public int CompareTo({{Name}} other) => Value.CompareTo(other.Value);
@@ -21,15 +22,15 @@ public partial record struct {{Name}}(int Value) : IIntValueType, IComparable, I
     public static bool operator <=({{Name}} left, {{Name}} right) => left.CompareTo(right) <= 0;
     public static bool operator >({{Name}} left, {{Name}} right) => left.CompareTo(right) > 0;
     public static bool operator >=({{Name}} left, {{Name}} right) => left.CompareTo(right) >= 0;
-    public static implicit operator int({{Name}} typedId) => typedId.Value;
-    public static explicit operator {{Name}}(int value) => new(value);
-    public int AsInt() => Value;
+    public static implicit operator double({{Name}} typedId) => typedId.Value;
+    public static explicit operator {{Name}}(double value) => new(value);
+    public double AsDouble() => Value;
     public bool IsValid() => {{ValidationBody}};
     public override string ToString() => Value.ToString();
 
     public static bool TryParse(string? s, out {{Name}} result)
     {
-        if (int.TryParse(s, out var value))
+        if (double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var value))
         {
             result = new {{Name}}(value);
             return true;
@@ -47,15 +48,15 @@ public partial record struct {{Name}}(int Value) : IIntValueType, IComparable, I
         var namespaceDecl = string.IsNullOrEmpty(info.Namespace) ? "" : $"namespace {info.Namespace};\n";
 
         string validationBody;
-        if (!info.IntMinimum.HasValue && !info.IntMaximum.HasValue)
+        if (!info.DoubleMinimum.HasValue && !info.DoubleMaximum.HasValue)
         {
             validationBody = "true";
         }
         else
         {
-            var parts = new List<string>();
-            if (info.IntMinimum.HasValue) parts.Add($"Value >= {info.IntMinimum.Value}");
-            if (info.IntMaximum.HasValue) parts.Add($"Value <= {info.IntMaximum.Value}");
+            var parts = new System.Collections.Generic.List<string>();
+            if (info.DoubleMinimum.HasValue) parts.Add($"Value >= {info.DoubleMinimum.Value.ToString(CultureInfo.InvariantCulture)}");
+            if (info.DoubleMaximum.HasValue) parts.Add($"Value <= {info.DoubleMaximum.Value.ToString(CultureInfo.InvariantCulture)}");
             validationBody = string.Join(" && ", parts);
         }
 

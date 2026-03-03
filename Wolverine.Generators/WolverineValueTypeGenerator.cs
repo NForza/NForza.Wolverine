@@ -1,11 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using NForza.Wolverine.ValueTypes.Generators.CodeGeneration;
-using NForza.Wolverine.ValueTypes.Generators.Roslyn;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NForza.Wolverine.Generators.CodeGeneration;
+using NForza.Wolverine.Generators.Roslyn;
 
-namespace NForza.Wolverine.ValueTypes.Generators;
+namespace NForza.Wolverine.Generators;
 
 [Generator]
 public class WolverineValueTypeGenerator : IIncrementalGenerator
@@ -36,6 +38,24 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
             && compilation.GetTypeByMetadataName("NForza.Wolverine.ValueTypes.IGuidValueType") is not null);
 
         context.RegisterSourceOutput(shouldGenerateMartenExtensions, GenerateMartenExtensions);
+
+        // Emit WolverineHub base class so user code can inherit from it.
+        context.RegisterPostInitializationOutput(EmitWolverineHub);
+
+        // SignalR bridge generation: find WolverineHub subclasses, parse constructor DSL.
+        var signalRHubs = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: (node, _) => node.IsClassInheritingFromWolverineHub(),
+                transform: (ctx, _) => ExtractSignalRHubInfo(ctx))
+            .Where(x => x is not null)
+            .Select((x, _) => x!)
+            .Collect();
+
+        var signalRHubsWithCheck = signalRHubs.Combine(
+            context.CompilationProvider.Select((compilation, _) =>
+                compilation.GetTypeByMetadataName("Microsoft.AspNetCore.SignalR.Hub") is not null));
+
+        context.RegisterSourceOutput(signalRHubsWithCheck, GenerateSignalRBridges);
     }
 
     private IncrementalValueProvider<ImmutableArray<ValueTypeInfo>> CreateProvider(
@@ -159,6 +179,138 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
             ValueTypeKind.Double => JsonConverterTemplates.GenerateDouble(vt),
             _ => throw new InvalidOperationException($"Unknown value type kind: {vt.Kind}")
         };
+    }
+
+    // --- SignalR bridge generation ---
+
+    private const string WolverineHubSource = @"#nullable enable
+using System;
+using System.Linq.Expressions;
+
+namespace NForza.Wolverine;
+
+internal abstract class WolverineHub
+{
+    protected void UsePath(string path) { }
+    protected void Broadcast<T>() { }
+    protected void Emit<T>(Expression<Func<T, object>> groupKeySelector) { }
+}
+";
+
+    private void EmitWolverineHub(IncrementalGeneratorPostInitializationContext context)
+    {
+        context.AddSource("WolverineHub.g.cs", WolverineHubSource);
+    }
+
+    private SignalRHubInfo? ExtractSignalRHubInfo(GeneratorSyntaxContext context)
+    {
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration) as INamedTypeSymbol;
+        if (symbol is null) return null;
+
+        var constructorBody = classDeclaration.Members
+            .OfType<ConstructorDeclarationSyntax>()
+            .FirstOrDefault()?.Body;
+
+        if (constructorBody is null) return null;
+
+        string? path = null;
+        var events = new List<SignalREventInfo>();
+
+        foreach (var statement in constructorBody.Statements)
+        {
+            if (statement is not ExpressionStatementSyntax expressionStatement) continue;
+            if (expressionStatement.Expression is not InvocationExpressionSyntax invocation) continue;
+
+            var methodName = invocation.Expression switch
+            {
+                IdentifierNameSyntax id => id.Identifier.Text,
+                GenericNameSyntax generic => generic.Identifier.Text,
+                _ => null
+            };
+
+            if (methodName == "UsePath" && invocation.ArgumentList.Arguments.Count == 1)
+            {
+                var arg = invocation.ArgumentList.Arguments[0].Expression;
+                if (arg is LiteralExpressionSyntax literal)
+                {
+                    path = literal.Token.ValueText;
+                }
+            }
+            else if (methodName == "Broadcast" && invocation.Expression is GenericNameSyntax broadcastGeneric)
+            {
+                var typeArg = broadcastGeneric.TypeArgumentList.Arguments.FirstOrDefault();
+                if (typeArg is not null)
+                {
+                    var eventSymbol = context.SemanticModel.GetSymbolInfo(typeArg).Symbol as INamedTypeSymbol;
+                    if (eventSymbol is not null)
+                    {
+                        events.Add(new SignalREventInfo
+                        {
+                            EventTypeName = eventSymbol.Name,
+                            EventTypeNamespace = eventSymbol.ContainingNamespace.GetNameOrEmpty(),
+                            IsBroadcast = true
+                        });
+                    }
+                }
+            }
+            else if (methodName == "Emit" && invocation.Expression is GenericNameSyntax emitGeneric)
+            {
+                var typeArg = emitGeneric.TypeArgumentList.Arguments.FirstOrDefault();
+                if (typeArg is not null)
+                {
+                    var eventSymbol = context.SemanticModel.GetSymbolInfo(typeArg).Symbol as INamedTypeSymbol;
+                    if (eventSymbol is not null)
+                    {
+                        string? groupKeyProperty = null;
+
+                        // Parse lambda: e => e.PropertyName
+                        if (invocation.ArgumentList.Arguments.Count == 1)
+                        {
+                            var lambdaArg = invocation.ArgumentList.Arguments[0].Expression;
+                            if (lambdaArg is SimpleLambdaExpressionSyntax lambda &&
+                                lambda.Body is MemberAccessExpressionSyntax memberAccess)
+                            {
+                                groupKeyProperty = memberAccess.Name.Identifier.Text;
+                            }
+                        }
+
+                        events.Add(new SignalREventInfo
+                        {
+                            EventTypeName = eventSymbol.Name,
+                            EventTypeNamespace = eventSymbol.ContainingNamespace.GetNameOrEmpty(),
+                            IsBroadcast = false,
+                            GroupKeyProperty = groupKeyProperty
+                        });
+                    }
+                }
+            }
+        }
+
+        if (string.IsNullOrEmpty(path) || events.Count == 0) return null;
+
+        return new SignalRHubInfo
+        {
+            HubClassName = symbol.Name,
+            Namespace = symbol.ContainingNamespace.GetNameOrEmpty(),
+            Path = path!,
+            Events = events.ToImmutableArray()
+        };
+    }
+
+    private void GenerateSignalRBridges(
+        SourceProductionContext spc,
+        (ImmutableArray<SignalRHubInfo> Hubs, bool SignalRAvailable) input)
+    {
+        if (!input.SignalRAvailable || input.Hubs.Length == 0) return;
+
+        foreach (var hub in input.Hubs)
+        {
+            spc.AddSource($"{hub.GeneratedHubName}.g.cs", SignalRBridgeTemplates.GenerateHub(hub));
+            spc.AddSource($"{hub.HubClassName}SignalRBridge.g.cs", SignalRBridgeTemplates.GenerateBridge(hub));
+        }
+
+        spc.AddSource("WolverineHubExtensions.g.cs", SignalRBridgeTemplates.GenerateRegistration(input.Hubs));
     }
 
 }

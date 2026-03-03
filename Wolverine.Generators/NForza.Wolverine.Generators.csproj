@@ -9,7 +9,7 @@
     <IsPackable>true</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <PackageId>NForza.Wolverine.ValueTypes.Generators</PackageId>
+    <PackageId>NForza.Wolverine.Generators</PackageId>
     <Authors>NForza</Authors>
     <Description>Source generator for strongly-typed value type wrappers for Wolverine and Marten. Eliminates primitive obsession with a single attribute.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="" />
+    <None Include="..\Wolverine.ValueTypes\README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\NForza.Wolverine.ValueTypes.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\Wolverine.ValueTypes\src\NForza.Wolverine.ValueTypes.csproj" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

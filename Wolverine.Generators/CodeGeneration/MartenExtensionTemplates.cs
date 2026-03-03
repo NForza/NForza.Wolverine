@@ -1,4 +1,4 @@
-namespace NForza.Wolverine.ValueTypes.Generators.CodeGeneration;
+namespace NForza.Wolverine.Generators.CodeGeneration;
 
 internal static class MartenExtensionTemplates
 {

@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-namespace NForza.Wolverine.ValueTypes.Generators.Roslyn;
+namespace NForza.Wolverine.Generators.Roslyn;
 
 internal static class SymbolExtensions
 {
