@@ -1,7 +1,7 @@
 <Solution>
   <Folder Name="/ValueTypes/">
     <Project Path="Wolverine.ValueTypes/src/NForza.Wolverine.ValueTypes.csproj" />
-    <Project Path="Wolverine.ValueTypes/Generators/NForza.Wolverine.ValueTypes.Generators.csproj" />
+    <Project Path="Wolverine.Generators/NForza.Wolverine.Generators.csproj" />
     <Project Path="Wolverine.ValueTypes/Tests/NForza.Wolverine.ValueTypes.Tests.csproj" />
   </Folder>
   <Project Path="IssuesAPI/IssuesAPI.Contracts/Wolverine.Issues.Contracts.csproj" />
