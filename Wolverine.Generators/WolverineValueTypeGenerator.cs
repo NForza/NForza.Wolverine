@@ -185,15 +185,32 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
 
     private const string WolverineHubSource = @"#nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace NForza.Wolverine;
 
+internal record WolverineHubEventConfig(string EventTypeName, Type EventType, bool IsBroadcast, string? GroupKeyProperty);
+
 internal abstract class WolverineHub
 {
-    protected void UsePath(string path) { }
-    protected void Broadcast<T>() { }
-    protected void Emit<T>(Expression<Func<T, object>> groupKeySelector) { }
+    public string Path { get; private set; } = """";
+    public List<WolverineHubEventConfig> Events { get; } = new();
+
+    protected void UsePath(string path) => Path = path;
+
+    protected void Broadcast<T>()
+        => Events.Add(new WolverineHubEventConfig(typeof(T).Name, typeof(T), true, null));
+
+    protected void SendToGroup<T>(Expression<Func<T, object>> groupKeySelector)
+    {
+        string? groupKey = null;
+        if (groupKeySelector.Body is MemberExpression member)
+            groupKey = member.Member.Name;
+        else if (groupKeySelector.Body is UnaryExpression unary && unary.Operand is MemberExpression innerMember)
+            groupKey = innerMember.Member.Name;
+        Events.Add(new WolverineHubEventConfig(typeof(T).Name, typeof(T), false, groupKey));
+    }
 }
 ";
 
@@ -254,7 +271,7 @@ internal abstract class WolverineHub
                     }
                 }
             }
-            else if (methodName == "Emit" && invocation.Expression is GenericNameSyntax emitGeneric)
+            else if (methodName == "SendToGroup" && invocation.Expression is GenericNameSyntax emitGeneric)
             {
                 var typeArg = emitGeneric.TypeArgumentList.Arguments.FirstOrDefault();
                 if (typeArg is not null)

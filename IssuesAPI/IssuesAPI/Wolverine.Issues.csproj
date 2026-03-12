@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Reinforced.Typings" Version="1.6.7" />
     <ProjectReference Include="..\IssuesAPI.Contracts\Wolverine.Issues.Contracts.csproj" />
     <ProjectReference Include="..\..\Wolverine.Generators\NForza.Wolverine.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.12.46" />

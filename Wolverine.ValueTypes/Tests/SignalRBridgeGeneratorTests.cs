@@ -19,8 +19,11 @@ public class Dummy { }
         wolverineHub.ShouldNotBeNull();
         wolverineHub.ShouldContain("internal abstract class WolverineHub");
         wolverineHub.ShouldContain("void Broadcast<T>()");
-        wolverineHub.ShouldContain("void Emit<T>");
+        wolverineHub.ShouldContain("void SendToGroup<T>");
         wolverineHub.ShouldContain("void UsePath(string path)");
+        wolverineHub.ShouldContain("public string Path { get; private set; }");
+        wolverineHub.ShouldContain("public List<WolverineHubEventConfig> Events { get; }");
+        wolverineHub.ShouldContain("record WolverineHubEventConfig");
     }
 
     [Fact]
@@ -86,7 +89,7 @@ namespace TestApp
     }
 
     [Fact]
-    public void Emit_GeneratesBridgeWithGroupSending()
+    public void SendToGroup_GeneratesBridgeWithGroupSending()
     {
         var source = @"
 using NForza.Wolverine;
@@ -102,7 +105,7 @@ namespace TestApp
         public TestHub()
         {
             UsePath(""/hub/test"");
-            Emit<IssueAssigned>(e => e.IssueId);
+            SendToGroup<IssueAssigned>(e => e.IssueId);
         }
     }
 }
@@ -146,7 +149,7 @@ namespace TestApp
     }
 
     [Fact]
-    public void MixedBroadcastAndEmit_GeneratesCorrectBridge()
+    public void MixedBroadcastAndSendToGroup_GeneratesCorrectBridge()
     {
         var source = @"
 using NForza.Wolverine;
@@ -164,7 +167,7 @@ namespace TestApp
         {
             UsePath(""/hub/test"");
             Broadcast<IssueCreated>();
-            Emit<IssueAssigned>(e => e.IssueId);
+            SendToGroup<IssueAssigned>(e => e.IssueId);
         }
     }
 }
