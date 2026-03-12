@@ -47,7 +47,7 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
 
         foreach (var evt in hub.Events)
         {
-            var importPath = ComputeRelativeImport(evt.EventType);
+            var importPath = ComputeRelativeImport(evt);
             sb.AppendLine($"import {{ {evt.EventTypeName} }} from '{importPath}';");
         }
 
@@ -185,12 +185,12 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
         return sb.ToString();
     }
 
-    private static string ComputeRelativeImport(Type eventType)
+    private static string ComputeRelativeImport(WolverineHubEventConfig evt)
     {
         // The hub service file is at the root of the generated directory (DontIncludeToNamespace),
         // while event types are at namespace-based paths (e.g., Wolverine/Issues/Contracts/Issues/IssueCreated)
-        var eventPath = eventType.Namespace?.Replace('.', '/') ?? "";
-        return $"./{eventPath}/{eventType.Name}";
+        var eventPath = evt.EventTypeNamespace.Replace('.', '/');
+        return $"./{eventPath}/{evt.EventTypeName}";
     }
 
     private static string StripIdSuffix(string propertyName)

@@ -190,7 +190,7 @@ using System.Linq.Expressions;
 
 namespace NForza.Wolverine;
 
-internal record WolverineHubEventConfig(string EventTypeName, Type EventType, bool IsBroadcast, string? GroupKeyProperty);
+internal record WolverineHubEventConfig(string EventTypeName, string EventTypeNamespace, bool IsBroadcast, string? GroupKeyProperty);
 
 internal abstract class WolverineHub
 {
@@ -200,7 +200,7 @@ internal abstract class WolverineHub
     protected void UsePath(string path) => Path = path;
 
     protected void Broadcast<T>()
-        => Events.Add(new WolverineHubEventConfig(typeof(T).Name, typeof(T), true, null));
+        => Events.Add(new WolverineHubEventConfig(typeof(T).Name, typeof(T).Namespace ?? """", true, null));
 
     protected void SendToGroup<T>(Expression<Func<T, object>> groupKeySelector)
     {
@@ -209,7 +209,7 @@ internal abstract class WolverineHub
             groupKey = member.Member.Name;
         else if (groupKeySelector.Body is UnaryExpression unary && unary.Operand is MemberExpression innerMember)
             groupKey = innerMember.Member.Name;
-        Events.Add(new WolverineHubEventConfig(typeof(T).Name, typeof(T), false, groupKey));
+        Events.Add(new WolverineHubEventConfig(typeof(T).Name, typeof(T).Namespace ?? """", false, groupKey));
     }
 }
 ";
