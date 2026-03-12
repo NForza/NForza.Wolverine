@@ -79,20 +79,20 @@ export class IssuesHubService {
   async subscribeToIssue(issueId: string): Promise<void> {
     this.subscribedIssueIds.add(issueId);
     if (this.connected()) {
-      await this.connection.invoke('JoinGroup', issueId);
+      await this.connection.invoke('SubscribeToIssue', issueId);
     }
   }
 
   async unsubscribeFromIssue(issueId: string): Promise<void> {
     this.subscribedIssueIds.delete(issueId);
     if (this.connected()) {
-      await this.connection.invoke('LeaveGroup', issueId);
+      await this.connection.invoke('UnsubscribeFromIssue', issueId);
     }
   }
 
   private async resubscribe(): Promise<void> {
     for (const issueId of this.subscribedIssueIds) {
-      await this.connection.invoke('JoinGroup', issueId);
+      await this.connection.invoke('SubscribeToIssue', issueId);
     }
   }
 

@@ -115,7 +115,12 @@ namespace TestApp
         var bridge = generated.FirstOrDefault(s => s.Contains("class TestHubSignalRBridge"));
         bridge.ShouldNotBeNull();
         bridge.ShouldContain("Handle(global::TestApp.IssueAssigned @event)");
-        bridge.ShouldContain("Clients.Group(@event.IssueId.ToString())");
+        bridge.ShouldContain("Clients.Group($\"IssueId:{@event.IssueId}\")");
+
+        var hub = generated.FirstOrDefault(s => s.Contains("class TestHubSignalR :"));
+        hub.ShouldNotBeNull();
+        hub.ShouldContain("SubscribeToIssue(string issueId)");
+        hub.ShouldContain("UnsubscribeFromIssue(string issueId)");
     }
 
     [Fact]
@@ -177,7 +182,7 @@ namespace TestApp
         var bridge = generated.FirstOrDefault(s => s.Contains("class TestHubSignalRBridge"));
         bridge.ShouldNotBeNull();
         bridge.ShouldContain("Clients.All.SendAsync(\"IssueCreated\"");
-        bridge.ShouldContain("Clients.Group(@event.IssueId.ToString()).SendAsync(\"IssueAssigned\"");
+        bridge.ShouldContain("Clients.Group($\"IssueId:{@event.IssueId}\").SendAsync(\"IssueAssigned\"");
     }
 
     [Fact]

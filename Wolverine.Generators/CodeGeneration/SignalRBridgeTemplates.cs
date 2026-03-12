@@ -19,9 +19,13 @@ internal static class SignalRBridgeTemplates
             sb.AppendLine();
         }
 
-        var hasGroups = hubInfo.Events.Any(e => !e.IsBroadcast);
+        var groupKeys = hubInfo.Events
+            .Where(e => !e.IsBroadcast && e.GroupKeyProperty != null)
+            .Select(e => e.GroupKeyProperty!)
+            .Distinct()
+            .ToList();
 
-        if (!hasGroups)
+        if (groupKeys.Count == 0)
         {
             sb.AppendLine($"public class {hubInfo.GeneratedHubName} : Hub;");
         }
@@ -29,8 +33,13 @@ internal static class SignalRBridgeTemplates
         {
             sb.AppendLine($"public class {hubInfo.GeneratedHubName} : Hub");
             sb.AppendLine("{");
-            sb.AppendLine("    public Task JoinGroup(string groupId) => Groups.AddToGroupAsync(Context.ConnectionId, groupId);");
-            sb.AppendLine("    public Task LeaveGroup(string groupId) => Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);");
+            foreach (var key in groupKeys)
+            {
+                var entityName = StripIdSuffix(key);
+                var paramName = char.ToLowerInvariant(key[0]) + key.Substring(1);
+                sb.AppendLine($"    public Task SubscribeTo{entityName}(string {paramName}) => Groups.AddToGroupAsync(Context.ConnectionId, $\"{key}:{{{paramName}}}\");");
+                sb.AppendLine($"    public Task UnsubscribeFrom{entityName}(string {paramName}) => Groups.RemoveFromGroupAsync(Context.ConnectionId, $\"{key}:{{{paramName}}}\");");
+            }
             sb.AppendLine("}");
         }
 
@@ -62,7 +71,7 @@ internal static class SignalRBridgeTemplates
             }
             else
             {
-                sb.AppendLine($"    public Task Handle(global::{evt.FullyQualifiedName} @event) => hub.Clients.Group(@event.{evt.GroupKeyProperty}.ToString()).SendAsync(\"{evt.EventTypeName}\", @event);");
+                sb.AppendLine($"    public Task Handle(global::{evt.FullyQualifiedName} @event) => hub.Clients.Group($\"{evt.GroupKeyProperty}:{{@event.{evt.GroupKeyProperty}}}\").SendAsync(\"{evt.EventTypeName}\", @event);");
             }
         }
 
@@ -94,5 +103,12 @@ internal static class SignalRBridgeTemplates
         sb.AppendLine("}");
 
         return sb.ToString();
+    }
+
+    private static string StripIdSuffix(string propertyName)
+    {
+        if (propertyName.EndsWith("Id"))
+            return propertyName.Substring(0, propertyName.Length - 2);
+        return propertyName;
     }
 }

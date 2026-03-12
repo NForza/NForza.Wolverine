@@ -135,14 +135,14 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
             sb.AppendLine($"  async subscribeTo{entityName}({paramName}: string): Promise<void> {{");
             sb.AppendLine($"    this.subscribed{entityName}Ids.add({paramName});");
             sb.AppendLine("    if (this.connected()) {");
-            sb.AppendLine($"      await this.connection.invoke('JoinGroup', {paramName});");
+            sb.AppendLine($"      await this.connection.invoke('SubscribeTo{entityName}', {paramName});");
             sb.AppendLine("    }");
             sb.AppendLine("  }");
             sb.AppendLine();
             sb.AppendLine($"  async unsubscribeFrom{entityName}({paramName}: string): Promise<void> {{");
             sb.AppendLine($"    this.subscribed{entityName}Ids.delete({paramName});");
             sb.AppendLine("    if (this.connected()) {");
-            sb.AppendLine($"      await this.connection.invoke('LeaveGroup', {paramName});");
+            sb.AppendLine($"      await this.connection.invoke('UnsubscribeFrom{entityName}', {paramName});");
             sb.AppendLine("    }");
             sb.AppendLine("  }");
             sb.AppendLine();
@@ -157,7 +157,7 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
                 var entityName = StripIdSuffix(key);
                 var idVar = ToCamelCase(key);
                 sb.AppendLine($"    for (const {idVar} of this.subscribed{entityName}Ids) {{");
-                sb.AppendLine($"      await this.connection.invoke('JoinGroup', {idVar});");
+                sb.AppendLine($"      await this.connection.invoke('SubscribeTo{entityName}', {idVar});");
                 sb.AppendLine("    }");
             }
             sb.AppendLine("  }");
