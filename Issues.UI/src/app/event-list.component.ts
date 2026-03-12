@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { SignalRService, IssueEvent } from './signalr.service';
+import { IssuesHubService, HubEvent } from './generated/IssuesHub';
 
 @Component({
   selector: 'app-event-list',
@@ -13,11 +13,11 @@ import { SignalRService, IssueEvent } from './signalr.service';
       </span>
     </div>
 
-    @if (signalr.events().length === 0) {
+    @if (signalr.allEvents().length === 0) {
       <p class="empty">No events received yet. Waiting for issue activity...</p>
     } @else {
       <ul class="events">
-        @for (event of signalr.events(); track event.receivedAt) {
+        @for (event of signalr.allEvents(); track event.receivedAt) {
           <li class="event" [attr.data-type]="event.eventType">
             <div class="event-header">
               <span class="event-type">{{ event.eventType }}</span>
@@ -45,9 +45,9 @@ import { SignalRService, IssueEvent } from './signalr.service';
   `,
 })
 export class EventListComponent {
-  protected readonly signalr = inject(SignalRService);
+  protected readonly signalr = inject(IssuesHubService);
 
-  protected formatData(event: IssueEvent): string {
+  protected formatData(event: HubEvent<unknown>): string {
     return JSON.stringify(event.data);
   }
 }

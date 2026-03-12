@@ -18,6 +18,7 @@ public class IssueReportProjection : MultiStreamProjection<AssigneeIssueReport, 
     public AssigneeIssueReport Create(IssueAssigned @event) => new()
     {
         Id = @event.AssigneeId,
+        AssigneeName = @event.AssigneeName,
         Issues =
         [
             new AssigneeIssueItem

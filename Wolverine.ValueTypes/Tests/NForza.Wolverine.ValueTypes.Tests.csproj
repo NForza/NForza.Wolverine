@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Generators\NForza.Wolverine.ValueTypes.Generators.csproj" />
+    <ProjectReference Include="..\..\Wolverine.Generators\NForza.Wolverine.Generators.csproj" />
     <ProjectReference Include="..\src\NForza.Wolverine.ValueTypes.csproj" />
   </ItemGroup>
 

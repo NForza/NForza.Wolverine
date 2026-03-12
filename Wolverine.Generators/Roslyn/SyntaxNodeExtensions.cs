@@ -2,7 +2,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace NForza.Wolverine.ValueTypes.Generators.Roslyn;
+namespace NForza.Wolverine.Generators.Roslyn;
 
 internal static class SyntaxNodeExtensions
 {
@@ -25,4 +25,11 @@ internal static class SyntaxNodeExtensions
 
     public static bool IsRecordWithStringValueAttribute(this SyntaxNode syntaxNode)
         => IsRecordWithAttribute(syntaxNode, "StringValue");
+
+    public static bool IsClassInheritingFromWolverineHub(this SyntaxNode syntaxNode)
+    {
+        return syntaxNode is ClassDeclarationSyntax classDeclaration &&
+               classDeclaration.BaseList?.Types
+                   .Any(t => t.Type.ToString() == "WolverineHub") == true;
+    }
 }

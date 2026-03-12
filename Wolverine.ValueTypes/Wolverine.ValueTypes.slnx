@@ -1,5 +1,5 @@
 <Solution>
   <Project Path="src/NForza.Wolverine.ValueTypes.csproj" />
-  <Project Path="Generators/NForza.Wolverine.ValueTypes.Generators.csproj" />
+  <Project Path="../Wolverine.Generators/NForza.Wolverine.Generators.csproj" />
   <Project Path="Tests/NForza.Wolverine.ValueTypes.Tests.csproj" />
 </Solution>

@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace NForza.Wolverine.ValueTypes.Generators.Roslyn;
+namespace NForza.Wolverine.Generators.Roslyn;
 
 internal static class GeneratorSyntaxContextExtensions
 {

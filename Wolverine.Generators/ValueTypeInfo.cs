@@ -1,4 +1,4 @@
-namespace NForza.Wolverine.ValueTypes.Generators;
+namespace NForza.Wolverine.Generators;
 
 internal enum ValueTypeKind
 {

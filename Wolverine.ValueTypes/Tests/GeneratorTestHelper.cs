@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using NForza.Wolverine.ValueTypes.Generators;
+using NForza.Wolverine.Generators;
 
 namespace NForza.Wolverine.ValueTypes.Tests;
 
@@ -19,6 +19,7 @@ public static class GeneratorTestHelper
             MetadataReference.CreateFromFile(typeof(GuidValueAttribute).Assembly.Location),
             MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location),
             MetadataReference.CreateFromFile(Assembly.Load("netstandard").Location),
+            MetadataReference.CreateFromFile(typeof(System.Linq.Expressions.Expression).Assembly.Location),
         };
 
         var compilation = CSharpCompilation.Create(

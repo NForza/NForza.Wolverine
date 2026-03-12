@@ -15,8 +15,10 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
     [Fact]
     public async Task should_create_an_issue()
     {
+        var originator = await CreateUser("Alice", "alice@example.com");
+
         var command = new CreateIssue(
-            new UserId(),
+            originator.Id,
             "Login page not loading",
             "Users cannot access the login page"
         );
@@ -35,11 +37,44 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
     }
 
     [Fact]
+    public async Task should_fail_to_create_issue_with_nonexistent_user()
+    {
+        await Scenario(x =>
+        {
+            x.Post.Json(new CreateIssue(new UserId(), "Title", "Description"))
+                .ToUrl("/issues");
+            x.StatusCodeShouldBe(404);
+        });
+    }
+
+    [Fact]
+    public async Task should_fail_to_assign_issue_to_nonexistent_user()
+    {
+        var originator = await CreateUser("Ivan", "ivan@example.com");
+
+        var (_, createResult) = await TrackedHttpCall(x =>
+        {
+            x.Post.Json(new CreateIssue(originator.Id, "Assign fail test", "Desc"))
+                .ToUrl("/issues");
+        });
+
+        var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
+
+        await Scenario(x =>
+        {
+            x.Put.Json(new AssignIssue(created.Id, new UserId()))
+                .ToUrl($"/issues/{created.Id}/assign");
+            x.StatusCodeShouldBe(404);
+        });
+    }
+
+    [Fact]
     public async Task should_get_an_issue()
     {
-        // Arrange: create an issue via the API
+        var originator = await CreateUser("Bob", "bob@example.com");
+
         var command = new CreateIssue(
-            new UserId(),
+            originator.Id,
             "Payment button broken",
             "Users cannot submit payments"
         );
@@ -51,19 +86,16 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
 
         var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
 
-        // Verify the issue exists by replaying the event stream
         await using var session = Store.QuerySession();
         var stored = await session.Events.AggregateStreamAsync<Issue>(created.Id);
         stored.ShouldNotBeNull("Issue should exist in Marten after TrackedHttpCall");
 
-        // Act: retrieve the issue via GET
         var getResult = await Scenario(x =>
         {
             x.Get.Url($"/issues/{created.Id}");
             x.StatusCodeShouldBe(200);
         });
 
-        // Assert
         var issue = getResult.ReadAsJson<Issue>();
         issue.ShouldNotBeNull();
         issue.Title.ShouldBe("Payment button broken");
@@ -74,9 +106,11 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
     [Fact]
     public async Task should_assign_an_issue()
     {
-        // Arrange: create an issue
+        var originator = await CreateUser("Charlie", "charlie@example.com");
+        var assignee = await CreateUser("Diana", "diana@example.com");
+
         var createCommand = new CreateIssue(
-            new UserId(),
+            originator.Id,
             "Database migration needed",
             "Old tables need cleanup"
         );
@@ -87,10 +121,8 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
         });
 
         var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
-        var assigneeId = new UserId();
 
-        // Act: assign the issue
-        var assignCommand = new AssignIssue(created.Id, assigneeId);
+        var assignCommand = new AssignIssue(created.Id, assignee.Id);
 
         await TrackedHttpCall(x =>
         {
@@ -98,19 +130,19 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
             x.StatusCodeShouldBe(204);
         });
 
-        // Assert: verify the assignee was set by replaying the event stream
         await using var session = Store.QuerySession();
         var issue = await session.Events.AggregateStreamAsync<Issue>(created.Id);
         issue.ShouldNotBeNull();
-        issue.AssigneeId.ShouldBe(assigneeId);
+        issue.AssigneeId.ShouldBe(assignee.Id);
     }
 
     [Fact]
     public async Task should_store_full_event_stream()
     {
-        // Arrange: create an issue then assign it
-        var originatorId = new UserId();
-        var createCommand = new CreateIssue(originatorId, "Event stream test", "Verify events are stored");
+        var originator = await CreateUser("Eve", "eve@example.com");
+        var assignee = await CreateUser("Frank", "frank@example.com");
+
+        var createCommand = new CreateIssue(originator.Id, "Event stream test", "Verify events are stored");
 
         var (_, createResult) = await TrackedHttpCall(x =>
         {
@@ -118,47 +150,46 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
         });
 
         var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
-        var assigneeId = new UserId();
 
         await TrackedHttpCall(x =>
         {
-            x.Put.Json(new AssignIssue(created.Id, assigneeId))
+            x.Put.Json(new AssignIssue(created.Id, assignee.Id))
                 .ToUrl($"/issues/{created.Id}/assign");
             x.StatusCodeShouldBe(204);
         });
 
-        // Act: read the raw event stream from Marten
         await using var session = Store.QuerySession();
         var events = await session.Events.FetchStreamAsync(created.Id);
 
-        // Assert: the stream should have 2 events in order
         events.Count.ShouldBe(2);
 
         var createdEvent = events[0].Data.ShouldBeOfType<IssueCreated>();
         createdEvent.Title.ShouldBe("Event stream test");
-        createdEvent.OriginatorId.ShouldBe(originatorId);
+        createdEvent.OriginatorId.ShouldBe(originator.Id);
+        createdEvent.OriginatorName.ShouldBe("Eve");
 
         var assignedEvent = events[1].Data.ShouldBeOfType<IssueAssigned>();
-        assignedEvent.AssigneeId.ShouldBe(assigneeId);
+        assignedEvent.AssigneeId.ShouldBe(assignee.Id);
+        assignedEvent.AssigneeName.ShouldBe("Frank");
 
-        // Verify stream metadata
         events[0].Version.ShouldBe(1);
         events[1].Version.ShouldBe(2);
 
-        // Verify the aggregate matches what we'd get by replaying events
         var snapshot = await session.Events.AggregateStreamAsync<Issue>(created.Id);
         snapshot.ShouldNotBeNull();
         snapshot.Title.ShouldBe("Event stream test");
-        snapshot.AssigneeId.ShouldBe(assigneeId);
+        snapshot.AssigneeId.ShouldBe(assignee.Id);
         snapshot.IsOpen.ShouldBeTrue();
     }
 
     [Fact]
     public async Task should_close_an_issue()
     {
+        var originator = await CreateUser("Grace", "grace@example.com");
+
         var (_, createResult) = await TrackedHttpCall(x =>
         {
-            x.Post.Json(new CreateIssue(new UserId(), "Close me", "Will be closed"))
+            x.Post.Json(new CreateIssue(originator.Id, "Close me", "Will be closed"))
                 .ToUrl("/issues");
         });
 
@@ -180,15 +211,16 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
     [Fact]
     public async Task should_reopen_a_closed_issue()
     {
+        var originator = await CreateUser("Heidi", "heidi@example.com");
+
         var (_, createResult) = await TrackedHttpCall(x =>
         {
-            x.Post.Json(new CreateIssue(new UserId(), "Reopen me", "Will be reopened"))
+            x.Post.Json(new CreateIssue(originator.Id, "Reopen me", "Will be reopened"))
                 .ToUrl("/issues");
         });
 
         var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
 
-        // Close it first
         await TrackedHttpCall(x =>
         {
             x.Put.Json(new CloseIssue(created.Id))
@@ -196,7 +228,6 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
             x.StatusCodeShouldBe(204);
         });
 
-        // Reopen it
         await TrackedHttpCall(x =>
         {
             x.Put.Json(new ReopenIssue(created.Id))
@@ -209,12 +240,10 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
         issue.ShouldNotBeNull();
         issue.IsOpen.ShouldBeTrue();
 
-        // Verify the full event stream has 3 events
         var events = await session.Events.FetchStreamAsync(created.Id);
         events.Count.ShouldBe(3);
         events[0].Data.ShouldBeOfType<IssueCreated>();
         events[1].Data.ShouldBeOfType<IssueClosed>();
         events[2].Data.ShouldBeOfType<IssueOpened>();
     }
-
 }

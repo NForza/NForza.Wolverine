@@ -9,6 +9,7 @@ public class IssueSummary
     public string Title { get; set; } = string.Empty;
     public string Status { get; set; } = "Open";
     public UserId? AssigneeId { get; set; }
+    public string? AssigneeName { get; set; }
     public DateTimeOffset Created { get; set; }
     public int EventCount { get; set; }
 }

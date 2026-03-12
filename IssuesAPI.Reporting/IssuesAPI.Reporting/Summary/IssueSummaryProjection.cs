@@ -19,12 +19,14 @@ public class IssueSummaryProjection : SingleStreamProjection<IssueSummary, Issue
     public void Apply(IssueUnassigned @event, IssueSummary view)
     {
         view.AssigneeId = null;
+        view.AssigneeName = null;
         view.EventCount++;
     }
 
     public void Apply(IssueAssigned @event, IssueSummary view)
     {
         view.AssigneeId = @event.AssigneeId;
+        view.AssigneeName = @event.AssigneeName;
         view.EventCount++;
     }
 

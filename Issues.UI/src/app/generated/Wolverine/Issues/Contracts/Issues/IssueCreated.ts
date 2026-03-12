@@ -1,10 +1,9 @@
-export namespace Wolverine.Issues.Contracts.Issues {
-	export interface IssueCreated
-	{
-		id: string;
-		originatorId: string;
-		title: string;
-		description: string;
-		openedAt: string;
-	}
+export interface IssueCreated
+{
+	id: string;
+	originatorId: string;
+	originatorName: string;
+	title: string;
+	description: string;
+	openedAt: string;
 }

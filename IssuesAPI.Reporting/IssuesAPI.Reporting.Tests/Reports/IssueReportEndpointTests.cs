@@ -35,14 +35,14 @@ public class IssueReportEndpointTests : IntegrationContext
         var assigneeId2 = new UserId();
 
         await AppendEvents(issueId1,
-            new IssueCreated(issueId1, new UserId(), "Report 1", "Desc 1", DateTimeOffset.UtcNow));
+            new IssueCreated(issueId1, new UserId(), "Originator", "Report 1", "Desc 1", DateTimeOffset.UtcNow));
         await AppendToStream(issueId1,
-            new IssueAssigned(issueId1, assigneeId1, "Report 1"));
+            new IssueAssigned(issueId1, assigneeId1, "Assignee 1", "Report 1"));
 
         await AppendEvents(issueId2,
-            new IssueCreated(issueId2, new UserId(), "Report 2", "Desc 2", DateTimeOffset.UtcNow));
+            new IssueCreated(issueId2, new UserId(), "Originator", "Report 2", "Desc 2", DateTimeOffset.UtcNow));
         await AppendToStream(issueId2,
-            new IssueAssigned(issueId2, assigneeId2, "Report 2"));
+            new IssueAssigned(issueId2, assigneeId2, "Assignee 2", "Report 2"));
 
         var result = await Scenario(x =>
         {
@@ -62,9 +62,9 @@ public class IssueReportEndpointTests : IntegrationContext
         var assigneeId = new UserId();
 
         await AppendEvents(issueId,
-            new IssueCreated(issueId, new UserId(), "Specific report", "Desc", DateTimeOffset.UtcNow));
+            new IssueCreated(issueId, new UserId(), "Originator", "Specific report", "Desc", DateTimeOffset.UtcNow));
         await AppendToStream(issueId,
-            new IssueAssigned(issueId, assigneeId, "Specific report"));
+            new IssueAssigned(issueId, assigneeId, "Assignee", "Specific report"));
 
         var result = await Scenario(x =>
         {

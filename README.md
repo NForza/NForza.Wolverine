@@ -103,7 +103,7 @@ Open http://localhost:4200. The UI connects to the IssuesAPI SignalR hub and dis
 dotnet test Wolverine.slnx
 ```
 
-Runs all 24 tests across 3 test projects (9 value type + 8 IssuesAPI + 7 reporting).
+Runs all 25 tests across 3 test projects (9 value type + 8 IssuesAPI + 8 reporting).
 
 ## Domain Model
 
@@ -113,20 +113,22 @@ Events are the source of truth, stored in Marten event streams:
 
 | Event | Fields | Description |
 |---|---|---|
-| `IssueCreated` | `Id`, `OriginatorId`, `Title`, `Description`, `OpenedAt` | A new issue was opened |
-| `IssueAssigned` | `IssueId`, `AssigneeId` | An issue was assigned to a user |
-| `IssueClosed` | `IssueId`, `Closed` | An issue was closed |
-| `IssueOpened` | `IssueId`, `Reopened` | A closed issue was reopened |
+| `IssueCreated` | `Id`, `OriginatorId`, `OriginatorName`, `Title`, `Description`, `OpenedAt` | A new issue was opened |
+| `IssueAssigned` | `IssueId`, `AssigneeId`, `AssigneeName`, `Title` | An issue was assigned to a user |
+| `IssueUnassigned` | `IssueId`, `AssigneeId` | An issue was unassigned from a user (emitted before reassignment) |
+| `IssueClosed` | `IssueId`, `AssigneeId`, `Closed` | An issue was closed |
+| `IssueOpened` | `IssueId`, `AssigneeId`, `Reopened` | A closed issue was reopened |
 
 ### Aggregates
 
 The `Issue` aggregate replays events to build current state:
 
 ```
-IssueCreated  -> sets Id, Title, Description, OriginatorId, IsOpen=true
-IssueAssigned -> sets AssigneeId
-IssueClosed   -> sets IsOpen=false
-IssueOpened   -> sets IsOpen=true
+IssueCreated    -> sets Id, Title, Description, OriginatorId, IsOpen=true
+IssueUnassigned -> sets AssigneeId=null
+IssueAssigned   -> sets AssigneeId
+IssueClosed     -> sets IsOpen=false
+IssueOpened     -> sets IsOpen=true
 ```
 
 ### Value Types
@@ -212,16 +214,15 @@ Events flow from the Marten outbox through RabbitMQ back into the application, w
 ```csharp
 public class IssueEventSignalRBridge(IHubContext<IssuesHub> hub)
 {
-    public Task Handle(IssueCreated @event) => Broadcast(nameof(IssueCreated), @event);
-    public Task Handle(IssueAssigned @event) => Broadcast(nameof(IssueAssigned), @event);
-    // ...
-
-    private Task Broadcast(string eventType, object data) =>
-        hub.Clients.All.SendAsync("IssueEvent", new { eventType, data });
+    public Task Handle(IssueCreated @event) => hub.Clients.All.SendAsync(nameof(IssueCreated), @event);
+    public Task Handle(IssueAssigned @event) => hub.Clients.All.SendAsync(nameof(IssueAssigned), @event);
+    public Task Handle(IssueUnassigned @event) => hub.Clients.All.SendAsync(nameof(IssueUnassigned), @event);
+    public Task Handle(IssueClosed @event) => hub.Clients.All.SendAsync(nameof(IssueClosed), @event);
+    public Task Handle(IssueOpened @event) => hub.Clients.All.SendAsync(nameof(IssueOpened), @event);
 }
 ```
 
-With `UseConventionalRouting()`, Wolverine automatically creates exchanges per message type and a queue for this handler — no manual wiring needed. The Angular UI receives events via the `@microsoft/signalr` client and updates a reactive signal store.
+Each event type is sent as its own SignalR method, so the Angular client registers a handler per event. With `UseConventionalRouting()`, Wolverine automatically creates exchanges per message type and a queue for this handler — no manual wiring needed.
 
 ### TypeScript Generation
 
