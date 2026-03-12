@@ -32,7 +32,13 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
 
     private static string GenerateServiceContent(WolverineHub hub, string serviceName)
     {
-        var hasGroups = hub.Events.Any(e => !e.IsBroadcast);
+        var groupKeys = hub.Events
+            .Where(e => !e.IsBroadcast && e.GroupKeyProperty != null)
+            .Select(e => e.GroupKeyProperty!)
+            .Distinct()
+            .ToList();
+
+        var hasGroups = groupKeys.Count > 0;
         var sb = new StringBuilder();
 
         // Imports
@@ -60,9 +66,10 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
         sb.AppendLine($"export class {serviceName} {{");
         sb.AppendLine("  private connection: HubConnection;");
 
-        if (hasGroups)
+        foreach (var key in groupKeys)
         {
-            sb.AppendLine("  private joinedGroups = new Set<string>();");
+            var entityName = StripIdSuffix(key);
+            sb.AppendLine($"  private subscribed{entityName}Ids = new Set<string>();");
         }
 
         sb.AppendLine();
@@ -107,7 +114,7 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
         {
             sb.AppendLine("    this.connection.onreconnected(() => {");
             sb.AppendLine("      this.connected.set(true);");
-            sb.AppendLine("      this.rejoinGroups();");
+            sb.AppendLine("      this.resubscribe();");
             sb.AppendLine("    });");
         }
         else
@@ -119,27 +126,40 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
         sb.AppendLine("  }");
         sb.AppendLine();
 
-        // Group management methods
+        // Per-group-key subscribe/unsubscribe methods
+        foreach (var key in groupKeys)
+        {
+            var entityName = StripIdSuffix(key);
+            var paramName = ToCamelCase(key);
+
+            sb.AppendLine($"  async subscribeTo{entityName}({paramName}: string): Promise<void> {{");
+            sb.AppendLine($"    this.subscribed{entityName}Ids.add({paramName});");
+            sb.AppendLine("    if (this.connected()) {");
+            sb.AppendLine($"      await this.connection.invoke('JoinGroup', {paramName});");
+            sb.AppendLine("    }");
+            sb.AppendLine("  }");
+            sb.AppendLine();
+            sb.AppendLine($"  async unsubscribeFrom{entityName}({paramName}: string): Promise<void> {{");
+            sb.AppendLine($"    this.subscribed{entityName}Ids.delete({paramName});");
+            sb.AppendLine("    if (this.connected()) {");
+            sb.AppendLine($"      await this.connection.invoke('LeaveGroup', {paramName});");
+            sb.AppendLine("    }");
+            sb.AppendLine("  }");
+            sb.AppendLine();
+        }
+
+        // Resubscribe on reconnect
         if (hasGroups)
         {
-            sb.AppendLine("  async joinGroup(groupId: string): Promise<void> {");
-            sb.AppendLine("    this.joinedGroups.add(groupId);");
-            sb.AppendLine("    if (this.connected()) {");
-            sb.AppendLine("      await this.connection.invoke('JoinGroup', groupId);");
-            sb.AppendLine("    }");
-            sb.AppendLine("  }");
-            sb.AppendLine();
-            sb.AppendLine("  async leaveGroup(groupId: string): Promise<void> {");
-            sb.AppendLine("    this.joinedGroups.delete(groupId);");
-            sb.AppendLine("    if (this.connected()) {");
-            sb.AppendLine("      await this.connection.invoke('LeaveGroup', groupId);");
-            sb.AppendLine("    }");
-            sb.AppendLine("  }");
-            sb.AppendLine();
-            sb.AppendLine("  private async rejoinGroups(): Promise<void> {");
-            sb.AppendLine("    for (const groupId of this.joinedGroups) {");
-            sb.AppendLine("      await this.connection.invoke('JoinGroup', groupId);");
-            sb.AppendLine("    }");
+            sb.AppendLine("  private async resubscribe(): Promise<void> {");
+            foreach (var key in groupKeys)
+            {
+                var entityName = StripIdSuffix(key);
+                var idVar = ToCamelCase(key);
+                sb.AppendLine($"    for (const {idVar} of this.subscribed{entityName}Ids) {{");
+                sb.AppendLine($"      await this.connection.invoke('JoinGroup', {idVar});");
+                sb.AppendLine("    }");
+            }
             sb.AppendLine("  }");
             sb.AppendLine();
         }
@@ -152,7 +172,7 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
 
         if (hasGroups)
         {
-            sb.AppendLine("      await this.rejoinGroups();");
+            sb.AppendLine("      await this.resubscribe();");
         }
 
         sb.AppendLine("    } catch (err) {");
@@ -171,6 +191,13 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
         // while event types are at namespace-based paths (e.g., Wolverine/Issues/Contracts/Issues/IssueCreated)
         var eventPath = eventType.Namespace?.Replace('.', '/') ?? "";
         return $"./{eventPath}/{eventType.Name}";
+    }
+
+    private static string StripIdSuffix(string propertyName)
+    {
+        if (propertyName.EndsWith("Id"))
+            return propertyName[..^2];
+        return propertyName;
     }
 
     private static string ToCamelCase(string name)

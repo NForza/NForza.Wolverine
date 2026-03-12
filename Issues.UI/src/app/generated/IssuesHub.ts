@@ -15,7 +15,7 @@ export interface HubEvent<T> {
 @Injectable({ providedIn: 'root' })
 export class IssuesHubService {
   private connection: HubConnection;
-  private joinedGroups = new Set<string>();
+  private subscribedIssueIds = new Set<string>();
 
   readonly issueCreated = signal<IssueCreated | null>(null);
   readonly issueAssigned = signal<IssueAssigned | null>(null);
@@ -71,28 +71,28 @@ export class IssuesHubService {
     this.connection.onclose(() => this.connected.set(false));
     this.connection.onreconnected(() => {
       this.connected.set(true);
-      this.rejoinGroups();
+      this.resubscribe();
     });
     this.start();
   }
 
-  async joinGroup(groupId: string): Promise<void> {
-    this.joinedGroups.add(groupId);
+  async subscribeToIssue(issueId: string): Promise<void> {
+    this.subscribedIssueIds.add(issueId);
     if (this.connected()) {
-      await this.connection.invoke('JoinGroup', groupId);
+      await this.connection.invoke('JoinGroup', issueId);
     }
   }
 
-  async leaveGroup(groupId: string): Promise<void> {
-    this.joinedGroups.delete(groupId);
+  async unsubscribeFromIssue(issueId: string): Promise<void> {
+    this.subscribedIssueIds.delete(issueId);
     if (this.connected()) {
-      await this.connection.invoke('LeaveGroup', groupId);
+      await this.connection.invoke('LeaveGroup', issueId);
     }
   }
 
-  private async rejoinGroups(): Promise<void> {
-    for (const groupId of this.joinedGroups) {
-      await this.connection.invoke('JoinGroup', groupId);
+  private async resubscribe(): Promise<void> {
+    for (const issueId of this.subscribedIssueIds) {
+      await this.connection.invoke('JoinGroup', issueId);
     }
   }
 
@@ -100,7 +100,7 @@ export class IssuesHubService {
     try {
       await this.connection.start();
       this.connected.set(true);
-      await this.rejoinGroups();
+      await this.resubscribe();
     } catch (err) {
       console.error('SignalR connection error:', err);
       setTimeout(() => this.start(), 5000);
