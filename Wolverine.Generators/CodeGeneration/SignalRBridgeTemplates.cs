@@ -19,7 +19,20 @@ internal static class SignalRBridgeTemplates
             sb.AppendLine();
         }
 
-        sb.AppendLine($"public class {hubInfo.GeneratedHubName} : Hub;");
+        var hasGroups = hubInfo.Events.Any(e => !e.IsBroadcast);
+
+        if (!hasGroups)
+        {
+            sb.AppendLine($"public class {hubInfo.GeneratedHubName} : Hub;");
+        }
+        else
+        {
+            sb.AppendLine($"public class {hubInfo.GeneratedHubName} : Hub");
+            sb.AppendLine("{");
+            sb.AppendLine("    public Task JoinGroup(string groupId) => Groups.AddToGroupAsync(Context.ConnectionId, groupId);");
+            sb.AppendLine("    public Task LeaveGroup(string groupId) => Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);");
+            sb.AppendLine("}");
+        }
 
         return sb.ToString();
     }

@@ -15,6 +15,7 @@ export interface HubEvent<T> {
 @Injectable({ providedIn: 'root' })
 export class IssuesHubService {
   private connection: HubConnection;
+  private joinedGroups = new Set<string>();
 
   readonly issueCreated = signal<IssueCreated | null>(null);
   readonly issueAssigned = signal<IssueAssigned | null>(null);
@@ -68,14 +69,38 @@ export class IssuesHubService {
     });
 
     this.connection.onclose(() => this.connected.set(false));
-    this.connection.onreconnected(() => this.connected.set(true));
+    this.connection.onreconnected(() => {
+      this.connected.set(true);
+      this.rejoinGroups();
+    });
     this.start();
+  }
+
+  async joinGroup(groupId: string): Promise<void> {
+    this.joinedGroups.add(groupId);
+    if (this.connected()) {
+      await this.connection.invoke('JoinGroup', groupId);
+    }
+  }
+
+  async leaveGroup(groupId: string): Promise<void> {
+    this.joinedGroups.delete(groupId);
+    if (this.connected()) {
+      await this.connection.invoke('LeaveGroup', groupId);
+    }
+  }
+
+  private async rejoinGroups(): Promise<void> {
+    for (const groupId of this.joinedGroups) {
+      await this.connection.invoke('JoinGroup', groupId);
+    }
   }
 
   private async start(): Promise<void> {
     try {
       await this.connection.start();
       this.connected.set(true);
+      await this.rejoinGroups();
     } catch (err) {
       console.error('SignalR connection error:', err);
       setTimeout(() => this.start(), 5000);

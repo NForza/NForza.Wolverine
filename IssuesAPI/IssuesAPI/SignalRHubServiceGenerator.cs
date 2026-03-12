@@ -32,6 +32,7 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
 
     private static string GenerateServiceContent(WolverineHub hub, string serviceName)
     {
+        var hasGroups = hub.Events.Any(e => !e.IsBroadcast);
         var sb = new StringBuilder();
 
         // Imports
@@ -58,6 +59,12 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
         sb.AppendLine("@Injectable({ providedIn: 'root' })");
         sb.AppendLine($"export class {serviceName} {{");
         sb.AppendLine("  private connection: HubConnection;");
+
+        if (hasGroups)
+        {
+            sb.AppendLine("  private joinedGroups = new Set<string>();");
+        }
+
         sb.AppendLine();
 
         // Per-event typed signals
@@ -95,16 +102,59 @@ public class SignalRHubServiceGenerator : ClassCodeGenerator
 
         sb.AppendLine();
         sb.AppendLine("    this.connection.onclose(() => this.connected.set(false));");
-        sb.AppendLine("    this.connection.onreconnected(() => this.connected.set(true));");
+
+        if (hasGroups)
+        {
+            sb.AppendLine("    this.connection.onreconnected(() => {");
+            sb.AppendLine("      this.connected.set(true);");
+            sb.AppendLine("      this.rejoinGroups();");
+            sb.AppendLine("    });");
+        }
+        else
+        {
+            sb.AppendLine("    this.connection.onreconnected(() => this.connected.set(true));");
+        }
+
         sb.AppendLine("    this.start();");
         sb.AppendLine("  }");
         sb.AppendLine();
+
+        // Group management methods
+        if (hasGroups)
+        {
+            sb.AppendLine("  async joinGroup(groupId: string): Promise<void> {");
+            sb.AppendLine("    this.joinedGroups.add(groupId);");
+            sb.AppendLine("    if (this.connected()) {");
+            sb.AppendLine("      await this.connection.invoke('JoinGroup', groupId);");
+            sb.AppendLine("    }");
+            sb.AppendLine("  }");
+            sb.AppendLine();
+            sb.AppendLine("  async leaveGroup(groupId: string): Promise<void> {");
+            sb.AppendLine("    this.joinedGroups.delete(groupId);");
+            sb.AppendLine("    if (this.connected()) {");
+            sb.AppendLine("      await this.connection.invoke('LeaveGroup', groupId);");
+            sb.AppendLine("    }");
+            sb.AppendLine("  }");
+            sb.AppendLine();
+            sb.AppendLine("  private async rejoinGroups(): Promise<void> {");
+            sb.AppendLine("    for (const groupId of this.joinedGroups) {");
+            sb.AppendLine("      await this.connection.invoke('JoinGroup', groupId);");
+            sb.AppendLine("    }");
+            sb.AppendLine("  }");
+            sb.AppendLine();
+        }
 
         // start method
         sb.AppendLine("  private async start(): Promise<void> {");
         sb.AppendLine("    try {");
         sb.AppendLine("      await this.connection.start();");
         sb.AppendLine("      this.connected.set(true);");
+
+        if (hasGroups)
+        {
+            sb.AppendLine("      await this.rejoinGroups();");
+        }
+
         sb.AppendLine("    } catch (err) {");
         sb.AppendLine("      console.error('SignalR connection error:', err);");
         sb.AppendLine("      setTimeout(() => this.start(), 5000);");
