@@ -10,9 +10,9 @@ internal class IssuesHub : WolverineHub
     {
         UsePath("/hub/issues");
         Broadcast<IssueCreated>();
-        Broadcast<IssueAssigned>();
-        Broadcast<IssueUnassigned>();
-        Broadcast<IssueClosed>();
-        Broadcast<IssueOpened>();
+        SendToGroup<IssueAssigned>(e => e.IssueId);
+        SendToGroup<IssueUnassigned>(e => e.IssueId);
+        SendToGroup<IssueClosed>(e => e.IssueId);
+        SendToGroup<IssueOpened>(e => e.IssueId);
     }
 }
