@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -30,3 +32,13 @@ jobs:
 
       - name: Run tests
         run: dotnet test Wolverine.ValueTypes/Wolverine.ValueTypes.slnx --configuration Release --no-build
+
+      - name: Check version bump
+        if: github.event_name == 'pull_request'
+        run: |
+          PACKAGE_CHANGED=$(git diff --name-only origin/main...HEAD -- Wolverine.ValueTypes/src/ Wolverine.Generators/ | head -1)
+          VERSION_CHANGED=$(git diff --name-only origin/main...HEAD -- Wolverine.ValueTypes/version.json | head -1)
+          if [[ -n "$PACKAGE_CHANGED" && -z "$VERSION_CHANGED" ]]; then
+            echo "::error::Package source files changed but Wolverine.ValueTypes/version.json was not updated"
+            exit 1
+          fi

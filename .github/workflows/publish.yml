@@ -40,10 +40,10 @@ jobs:
         run: dotnet build Wolverine.ValueTypes/Wolverine.ValueTypes.slnx --configuration Release --no-restore -p:Version=${{ steps.version.outputs.VERSION }}
 
       - name: Run unit tests
-        run: dotnet test Wolverine.ValueTypes/test/NForza.Wolverine.ValueTypes.Tests --configuration Release --no-build
+        run: dotnet test Wolverine.ValueTypes/Wolverine.ValueTypes.slnx --configuration Release --no-build
 
       - name: Pack
-        run: dotnet pack Wolverine.ValueTypes/src/NForza.Wolverine.ValueTypes.Generators --configuration Release --no-build -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkg
+        run: dotnet pack Wolverine.Generators/NForza.Wolverine.Generators --configuration Release --no-build -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkg
 
       - name: Verify package contents
         run: |
