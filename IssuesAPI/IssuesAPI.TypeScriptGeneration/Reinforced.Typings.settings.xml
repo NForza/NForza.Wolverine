@@ -2,7 +2,7 @@
   <PropertyGroup>
     <RtTargetDirectory>$(ProjectDir)..\..\Issues.UI\src\app\generated</RtTargetDirectory>
     <RtDivideTypesAmongFiles>true</RtDivideTypesAmongFiles>
-    <RtConfigurationMethod>Wolverine.Issues.ReinforcedTypingsConfiguration.Configure</RtConfigurationMethod>
+    <RtConfigurationMethod>Wolverine.Issues.TypeScriptGeneration.ReinforcedTypingsConfiguration.Configure</RtConfigurationMethod>
     <RtBypassTypeScriptcompilation>false</RtBypassTypeScriptcompilation>
     <RtDisable>false</RtDisable>
   </PropertyGroup>

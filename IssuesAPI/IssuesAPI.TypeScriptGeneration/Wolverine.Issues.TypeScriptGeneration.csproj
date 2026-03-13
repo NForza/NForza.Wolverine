@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Reinforced.Typings" Version="1.6.7" />
+    <ProjectReference Include="..\IssuesAPI.Contracts\Wolverine.Issues.Contracts.csproj" />
+    <ProjectReference Include="..\IssuesAPI\Wolverine.Issues.csproj" />
+  </ItemGroup>
+
+</Project>

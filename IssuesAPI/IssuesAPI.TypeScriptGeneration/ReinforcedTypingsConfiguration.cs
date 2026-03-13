@@ -2,7 +2,6 @@ using NForza.Wolverine;
 using NForza.Wolverine.ValueTypes;
 using Reinforced.Typings.Ast.TypeNames;
 using Reinforced.Typings.Fluent;
-
 [assembly: Reinforced.Typings.Attributes.TsGlobal(
     CamelCaseForProperties = true,
     UseModules = true,
@@ -11,13 +10,14 @@ using Reinforced.Typings.Fluent;
     WriteWarningComment = false
 )]
 
-namespace Wolverine.Issues;
+namespace Wolverine.Issues.TypeScriptGeneration;
 
 public static class ReinforcedTypingsConfiguration
 {
     public static void Configure(Reinforced.Typings.Fluent.ConfigurationBuilder builder)
     {
         var contractsAssembly = typeof(Contracts.Issues.IssueCreated).Assembly;
+        var apiAssembly = typeof(Program).Assembly;
 
         // Auto-substitute all value types to string
         var valueTypes = contractsAssembly.GetTypes()
@@ -42,7 +42,7 @@ public static class ReinforcedTypingsConfiguration
         );
 
         // Exclude source-generated infrastructure types from RT export
-        var wolverineInfraTypes = typeof(ReinforcedTypingsConfiguration).Assembly.GetTypes()
+        var wolverineInfraTypes = apiAssembly.GetTypes()
             .Where(t => t.Namespace == "NForza.Wolverine");
         foreach (var t in wolverineInfraTypes)
         {
@@ -50,7 +50,6 @@ public static class ReinforcedTypingsConfiguration
         }
 
         // Discover WolverineHub subclasses in the API assembly and generate SignalR services
-        var apiAssembly = typeof(ReinforcedTypingsConfiguration).Assembly;
         var hubTypes = apiAssembly.GetTypes()
             .Where(t => !t.IsAbstract && IsSubclassOfWolverineHub(t))
             .ToArray();
