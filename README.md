@@ -103,7 +103,7 @@ Open http://localhost:4200. The UI connects to the IssuesAPI SignalR hub and dis
 dotnet test Wolverine.slnx
 ```
 
-Runs all 25 tests across 3 test projects (9 value type + 8 IssuesAPI + 8 reporting).
+Runs all 40 tests across 3 test projects (22 generator + 10 IssuesAPI + 8 reporting).
 
 ## Domain Model
 
@@ -245,7 +245,13 @@ The `NForza.Wolverine.ValueTypes.Generators` source generator turns simple decla
 public partial record struct IssueId;
 ```
 
-Into full record structs with JSON serialization, `TryParse`, comparison operators, and Marten-compatible extension methods. A `WolverineValueTypeExtension` is auto-generated to register all JSON converters with Wolverine's serializer.
+Into full record structs with JSON serialization, `TryParse`, `IParsable<T>` (on .NET 7+), comparison operators, and Marten-compatible extension methods. A `WolverineValueTypeExtension` is auto-generated to register all JSON converters with Wolverine's serializer.
+
+Supported backing types: `Guid` (`[GuidValue]`), `string` (`[StringValue]`), `int` (`[IntValue]`), `double` (`[DoubleValue]`), `long` (`[LongValue]`), `decimal` (`[DecimalValue]`), `DateOnly` (`[DateOnlyValue]`), `DateTime` (`[DateTimeValue]`), `DateTimeOffset` (`[DateTimeOffsetValue]`).
+
+When `Microsoft.AspNetCore.OpenApi` is referenced, a `WolverineValueTypeOpenApiTransformer` is also generated to map value types to their backing type schemas in OpenAPI docs.
+
+The generator includes an analyzer diagnostic **NFW001** that warns on `default(ValueType)` usage, since default-constructed value types are invalid.
 
 ## Infrastructure
 

@@ -5,7 +5,12 @@ internal enum ValueTypeKind
     Guid,
     String,
     Int,
-    Double
+    Double,
+    Long,
+    Decimal,
+    DateOnly,
+    DateTime,
+    DateTimeOffset
 }
 
 internal class ValueTypeInfo
@@ -20,6 +25,11 @@ internal class ValueTypeInfo
         ValueTypeKind.String => "string",
         ValueTypeKind.Int => "int",
         ValueTypeKind.Double => "double",
+        ValueTypeKind.Long => "long",
+        ValueTypeKind.Decimal => "decimal",
+        ValueTypeKind.DateOnly => "System.DateOnly",
+        ValueTypeKind.DateTime => "System.DateTime",
+        ValueTypeKind.DateTimeOffset => "System.DateTimeOffset",
         _ => "object"
     };
 
@@ -35,4 +45,12 @@ internal class ValueTypeInfo
     // Double validation
     public double? DoubleMinimum { get; set; }
     public double? DoubleMaximum { get; set; }
+
+    // Long validation
+    public long? LongMinimum { get; set; }
+    public long? LongMaximum { get; set; }
+
+    // Decimal validation
+    public decimal? DecimalMinimum { get; set; }
+    public decimal? DecimalMaximum { get; set; }
 }

@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace NForza.Wolverine.Generators.CodeGeneration;
 
-internal static class DoubleValueTemplates
+internal static class DateOnlyValueTemplates
 {
     private const string RecordStructTemplate = @"#nullable enable
 using System;
@@ -14,7 +13,7 @@ using NForza.Wolverine.ValueTypes;
 {{NamespaceDeclaration}}
 [JsonConverter(typeof({{Name}}JsonConverter))]
 [DebuggerDisplay(""{Value}"")]
-public partial record struct {{Name}}(double Value) : IDoubleValueType, IComparable, IComparable<{{Name}}>, IEquatable<{{Name}}>
+public partial record struct {{Name}}(DateOnly Value) : IDateOnlyValueType, IComparable, IComparable<{{Name}}>, IEquatable<{{Name}}>
 #if NET7_0_OR_GREATER
     , IParsable<{{Name}}>
 #endif
@@ -25,15 +24,15 @@ public partial record struct {{Name}}(double Value) : IDoubleValueType, ICompara
     public static bool operator <=({{Name}} left, {{Name}} right) => left.CompareTo(right) <= 0;
     public static bool operator >({{Name}} left, {{Name}} right) => left.CompareTo(right) > 0;
     public static bool operator >=({{Name}} left, {{Name}} right) => left.CompareTo(right) >= 0;
-    public static implicit operator double({{Name}} typedId) => typedId.Value;
-    public static explicit operator {{Name}}(double value) => new(value);
-    public double AsDouble() => Value;
-    public bool IsValid() => {{ValidationBody}};
-    public override string ToString() => Value.ToString();
+    public static explicit operator DateOnly({{Name}} typedId) => typedId.Value;
+    public static explicit operator {{Name}}(DateOnly value) => new(value);
+    public DateOnly AsDateOnly() => Value;
+    public bool IsValid() => Value != default;
+    public override string ToString() => Value.ToString(""yyyy-MM-dd"");
 
     public static bool TryParse(string? s, out {{Name}} result)
     {
-        if (double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var value))
+        if (DateOnly.TryParse(s, out var value))
         {
             result = new {{Name}}(value);
             return true;
@@ -54,25 +53,10 @@ public partial record struct {{Name}}(double Value) : IDoubleValueType, ICompara
     public static string GenerateRecordStruct(ValueTypeInfo info)
     {
         var namespaceDecl = string.IsNullOrEmpty(info.Namespace) ? "" : $"namespace {info.Namespace};\n";
-
-        string validationBody;
-        if (!info.DoubleMinimum.HasValue && !info.DoubleMaximum.HasValue)
-        {
-            validationBody = "true";
-        }
-        else
-        {
-            var parts = new System.Collections.Generic.List<string>();
-            if (info.DoubleMinimum.HasValue) parts.Add($"Value >= {info.DoubleMinimum.Value.ToString(CultureInfo.InvariantCulture)}");
-            if (info.DoubleMaximum.HasValue) parts.Add($"Value <= {info.DoubleMaximum.Value.ToString(CultureInfo.InvariantCulture)}");
-            validationBody = string.Join(" && ", parts);
-        }
-
         return TemplateEngine.Render(RecordStructTemplate, new Dictionary<string, string>
         {
             ["Name"] = info.Name,
-            ["NamespaceDeclaration"] = namespaceDecl,
-            ["ValidationBody"] = validationBody
+            ["NamespaceDeclaration"] = namespaceDecl
         });
     }
 }

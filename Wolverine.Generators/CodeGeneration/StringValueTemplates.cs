@@ -15,6 +15,9 @@ using NForza.Wolverine.ValueTypes;
 [JsonConverter(typeof({{Name}}JsonConverter))]
 [DebuggerDisplay(""{Value}"")]
 public partial record struct {{Name}}(string Value) : IStringValueType
+#if NET7_0_OR_GREATER
+    , IParsable<{{Name}}>
+#endif
 {
     public static readonly {{Name}} Empty = new {{Name}}(string.Empty);
     public bool IsEmpty() => string.IsNullOrEmpty(Value);
@@ -37,6 +40,11 @@ public partial record struct {{Name}}(string Value) : IStringValueType
 
     public static bool TryParse(string? s, IFormatProvider? provider, out {{Name}} result)
         => TryParse(s, out result);
+
+#if NET7_0_OR_GREATER
+    public static {{Name}} Parse(string s, IFormatProvider? provider) =>
+        TryParse(s, provider, out var result) ? result : throw new FormatException($""Cannot parse '{s}' as {{Name}}."");
+#endif
 }";
 
     public static string GenerateRecordStruct(ValueTypeInfo info)

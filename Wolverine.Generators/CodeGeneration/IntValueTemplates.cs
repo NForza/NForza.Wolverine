@@ -14,6 +14,9 @@ using NForza.Wolverine.ValueTypes;
 [JsonConverter(typeof({{Name}}JsonConverter))]
 [DebuggerDisplay(""{Value}"")]
 public partial record struct {{Name}}(int Value) : IIntValueType, IComparable, IComparable<{{Name}}>, IEquatable<{{Name}}>
+#if NET7_0_OR_GREATER
+    , IParsable<{{Name}}>
+#endif
 {
     public int CompareTo(object? other) => other is {{Name}} ? Value.CompareTo((({{Name}})other).Value) : -1;
     public int CompareTo({{Name}} other) => Value.CompareTo(other.Value);
@@ -40,6 +43,11 @@ public partial record struct {{Name}}(int Value) : IIntValueType, IComparable, I
 
     public static bool TryParse(string? s, IFormatProvider? provider, out {{Name}} result)
         => TryParse(s, out result);
+
+#if NET7_0_OR_GREATER
+    public static {{Name}} Parse(string s, IFormatProvider? provider) =>
+        TryParse(s, provider, out var result) ? result : throw new FormatException($""Cannot parse '{s}' as {{Name}}."");
+#endif
 }";
 
     public static string GenerateRecordStruct(ValueTypeInfo info)

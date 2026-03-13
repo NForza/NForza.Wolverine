@@ -26,6 +26,21 @@ internal static class SyntaxNodeExtensions
     public static bool IsRecordWithStringValueAttribute(this SyntaxNode syntaxNode)
         => IsRecordWithAttribute(syntaxNode, "StringValue");
 
+    public static bool IsRecordWithLongValueAttribute(this SyntaxNode syntaxNode)
+        => IsRecordWithAttribute(syntaxNode, "LongValue");
+
+    public static bool IsRecordWithDecimalValueAttribute(this SyntaxNode syntaxNode)
+        => IsRecordWithAttribute(syntaxNode, "DecimalValue");
+
+    public static bool IsRecordWithDateOnlyValueAttribute(this SyntaxNode syntaxNode)
+        => IsRecordWithAttribute(syntaxNode, "DateOnlyValue");
+
+    public static bool IsRecordWithDateTimeValueAttribute(this SyntaxNode syntaxNode)
+        => IsRecordWithAttribute(syntaxNode, "DateTimeValue");
+
+    public static bool IsRecordWithDateTimeOffsetValueAttribute(this SyntaxNode syntaxNode)
+        => IsRecordWithAttribute(syntaxNode, "DateTimeOffsetValue");
+
     public static bool IsClassInheritingFromWolverineHub(this SyntaxNode syntaxNode)
     {
         return syntaxNode is ClassDeclarationSyntax classDeclaration &&
