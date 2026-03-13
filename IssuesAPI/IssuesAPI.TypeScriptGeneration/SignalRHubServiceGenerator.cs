@@ -5,7 +5,7 @@ using Reinforced.Typings.Ast;
 using Reinforced.Typings.Ast.TypeNames;
 using Reinforced.Typings.Generators;
 
-namespace Wolverine.Issues;
+namespace Wolverine.Issues.TypeScriptGeneration;
 
 internal static class HubMetadataStore
 {
