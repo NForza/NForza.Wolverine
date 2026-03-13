@@ -18,15 +18,27 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
         var stringValues = CreateProvider(context, Roslyn.SyntaxNodeExtensions.IsRecordWithStringValueAttribute, ValueTypeKind.String);
         var intValues = CreateProvider(context, Roslyn.SyntaxNodeExtensions.IsRecordWithIntValueAttribute, ValueTypeKind.Int);
         var doubleValues = CreateProvider(context, Roslyn.SyntaxNodeExtensions.IsRecordWithDoubleValueAttribute, ValueTypeKind.Double);
+        var longValues = CreateProvider(context, Roslyn.SyntaxNodeExtensions.IsRecordWithLongValueAttribute, ValueTypeKind.Long);
+        var decimalValues = CreateProvider(context, Roslyn.SyntaxNodeExtensions.IsRecordWithDecimalValueAttribute, ValueTypeKind.Decimal);
+        var dateOnlyValues = CreateProvider(context, Roslyn.SyntaxNodeExtensions.IsRecordWithDateOnlyValueAttribute, ValueTypeKind.DateOnly);
+        var dateTimeValues = CreateProvider(context, Roslyn.SyntaxNodeExtensions.IsRecordWithDateTimeValueAttribute, ValueTypeKind.DateTime);
+        var dateTimeOffsetValues = CreateProvider(context, Roslyn.SyntaxNodeExtensions.IsRecordWithDateTimeOffsetValueAttribute, ValueTypeKind.DateTimeOffset);
 
         var allValues = guidValues
             .Combine(stringValues)
             .Combine(intValues)
             .Combine(doubleValues)
+            .Combine(longValues)
+            .Combine(decimalValues)
+            .Combine(dateOnlyValues)
+            .Combine(dateTimeValues)
+            .Combine(dateTimeOffsetValues)
             .Select((combined, _) =>
             {
-                var (((guids, strings), ints), doubles) = combined;
-                return guids.AddRange(strings).AddRange(ints).AddRange(doubles);
+                var ((((((((guids, strings), ints), doubles), longs), decimals), dateOnlys), dateTimes), dateTimeOffsets) = combined;
+                return guids.AddRange(strings).AddRange(ints).AddRange(doubles)
+                    .AddRange(longs).AddRange(decimals).AddRange(dateOnlys)
+                    .AddRange(dateTimes).AddRange(dateTimeOffsets);
             });
 
         context.RegisterSourceOutput(allValues, GenerateAllSources);
@@ -38,6 +50,13 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
             && compilation.GetTypeByMetadataName("NForza.Wolverine.ValueTypes.IGuidValueType") is not null);
 
         context.RegisterSourceOutput(shouldGenerateMartenExtensions, GenerateMartenExtensions);
+
+        // Generate OpenAPI schema transformer when Microsoft.AspNetCore.OpenApi is referenced.
+        var openApiCheck = context.CompilationProvider.Select((compilation, _) =>
+            compilation.GetTypeByMetadataName("Microsoft.AspNetCore.OpenApi.IOpenApiSchemaTransformer") is not null);
+
+        var allValuesWithOpenApi = allValues.Combine(openApiCheck);
+        context.RegisterSourceOutput(allValuesWithOpenApi, GenerateOpenApiTransformer);
 
         // Emit WolverineHub base class so user code can inherit from it.
         context.RegisterPostInitializationOutput(EmitWolverineHub);
@@ -95,6 +114,12 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
             case ValueTypeKind.Double:
                 ExtractDoubleValidation(symbol, info);
                 break;
+            case ValueTypeKind.Long:
+                ExtractLongValidation(symbol, info);
+                break;
+            case ValueTypeKind.Decimal:
+                ExtractDecimalValidation(symbol, info);
+                break;
         }
 
         return info;
@@ -131,6 +156,30 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
         if (args.Count > 1 && double.TryParse(args[1], out var max) && !double.IsNaN(max)) info.DoubleMaximum = max;
     }
 
+    private void ExtractLongValidation(INamedTypeSymbol symbol, ValueTypeInfo info)
+    {
+        var attribute = symbol.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "LongValueAttribute");
+        if (attribute is null) return;
+
+        var args = attribute.ConstructorArguments.Select(a => a.Value?.ToString()).ToList();
+        if (args.Count > 0 && long.TryParse(args[0], out var min) && min != long.MinValue) info.LongMinimum = min;
+        if (args.Count > 1 && long.TryParse(args[1], out var max) && max != long.MaxValue) info.LongMaximum = max;
+    }
+
+    private void ExtractDecimalValidation(INamedTypeSymbol symbol, ValueTypeInfo info)
+    {
+        var attribute = symbol.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "DecimalValueAttribute");
+        if (attribute is null) return;
+
+        // The two-arg constructor passes (double minimum, double maximum)
+        var args = attribute.ConstructorArguments.Select(a => a.Value?.ToString()).ToList();
+        if (args.Count >= 2)
+        {
+            if (double.TryParse(args[0], out var minD)) info.DecimalMinimum = (decimal)minD;
+            if (double.TryParse(args[1], out var maxD)) info.DecimalMaximum = (decimal)maxD;
+        }
+    }
+
     private void GenerateAllSources(SourceProductionContext spc, ImmutableArray<ValueTypeInfo> valueTypes)
     {
         foreach (var vt in valueTypes)
@@ -157,6 +206,16 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
         }
     }
 
+    private void GenerateOpenApiTransformer(
+        SourceProductionContext spc,
+        (ImmutableArray<ValueTypeInfo> ValueTypes, bool OpenApiAvailable) input)
+    {
+        if (!input.OpenApiAvailable || input.ValueTypes.Length == 0) return;
+
+        var source = OpenApiTransformerTemplates.Generate(input.ValueTypes);
+        spc.AddSource("WolverineValueTypeOpenApiTransformer.g.cs", source);
+    }
+
     private string GenerateRecordStruct(ValueTypeInfo vt)
     {
         return vt.Kind switch
@@ -165,6 +224,11 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
             ValueTypeKind.String => StringValueTemplates.GenerateRecordStruct(vt),
             ValueTypeKind.Int => IntValueTemplates.GenerateRecordStruct(vt),
             ValueTypeKind.Double => DoubleValueTemplates.GenerateRecordStruct(vt),
+            ValueTypeKind.Long => LongValueTemplates.GenerateRecordStruct(vt),
+            ValueTypeKind.Decimal => DecimalValueTemplates.GenerateRecordStruct(vt),
+            ValueTypeKind.DateOnly => DateOnlyValueTemplates.GenerateRecordStruct(vt),
+            ValueTypeKind.DateTime => DateTimeValueTemplates.GenerateRecordStruct(vt),
+            ValueTypeKind.DateTimeOffset => DateTimeOffsetValueTemplates.GenerateRecordStruct(vt),
             _ => throw new InvalidOperationException($"Unknown value type kind: {vt.Kind}")
         };
     }
@@ -177,6 +241,11 @@ public class WolverineValueTypeGenerator : IIncrementalGenerator
             ValueTypeKind.String => JsonConverterTemplates.GenerateString(vt),
             ValueTypeKind.Int => JsonConverterTemplates.GenerateInt(vt),
             ValueTypeKind.Double => JsonConverterTemplates.GenerateDouble(vt),
+            ValueTypeKind.Long => JsonConverterTemplates.GenerateLong(vt),
+            ValueTypeKind.Decimal => JsonConverterTemplates.GenerateDecimal(vt),
+            ValueTypeKind.DateOnly => JsonConverterTemplates.GenerateDateOnly(vt),
+            ValueTypeKind.DateTime => JsonConverterTemplates.GenerateDateTime(vt),
+            ValueTypeKind.DateTimeOffset => JsonConverterTemplates.GenerateDateTimeOffset(vt),
             _ => throw new InvalidOperationException($"Unknown value type kind: {vt.Kind}")
         };
     }

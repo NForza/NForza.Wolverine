@@ -198,4 +198,146 @@ public partial record struct GlobalId;
             .Substring(recordSource.IndexOf("using NForza") + 1)
             .ShouldNotContain("namespace");
     }
+
+    [Fact]
+    public void LongValue_GeneratesRecordStruct()
+    {
+        var source = @"
+using NForza.Wolverine.ValueTypes;
+
+namespace TestApp;
+
+[LongValue(0, 1000000)]
+public partial record struct Counter;
+";
+        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        diagnostics.ShouldBeEmpty();
+
+        var recordSource = generated.FirstOrDefault(s => s.Contains("public partial record struct Counter(long Value)"));
+        recordSource.ShouldNotBeNull();
+        recordSource.ShouldContain("ILongValueType");
+        recordSource.ShouldContain("Value >= 0L");
+        recordSource.ShouldContain("Value <= 1000000L");
+        recordSource.ShouldContain("operator <(");
+        recordSource.ShouldContain("operator >(");
+        recordSource.ShouldContain("AsLong()");
+        recordSource.ShouldContain("static bool TryParse");
+        recordSource.ShouldContain("IParsable<Counter>");
+    }
+
+    [Fact]
+    public void DecimalValue_GeneratesRecordStruct()
+    {
+        var source = @"
+using NForza.Wolverine.ValueTypes;
+
+namespace TestApp;
+
+[DecimalValue]
+public partial record struct Money;
+";
+        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        diagnostics.ShouldBeEmpty();
+
+        var recordSource = generated.FirstOrDefault(s => s.Contains("public partial record struct Money(decimal Value)"));
+        recordSource.ShouldNotBeNull();
+        recordSource.ShouldContain("IDecimalValueType");
+        recordSource.ShouldContain("AsDecimal()");
+        recordSource.ShouldContain("CultureInfo.InvariantCulture");
+        recordSource.ShouldContain("static bool TryParse");
+        recordSource.ShouldContain("IParsable<Money>");
+    }
+
+    [Fact]
+    public void DateOnlyValue_GeneratesRecordStruct()
+    {
+        var source = @"
+using NForza.Wolverine.ValueTypes;
+
+namespace TestApp;
+
+[DateOnlyValue]
+public partial record struct BirthDate;
+";
+        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        diagnostics.ShouldBeEmpty();
+
+        var recordSource = generated.FirstOrDefault(s => s.Contains("public partial record struct BirthDate(DateOnly Value)"));
+        recordSource.ShouldNotBeNull();
+        recordSource.ShouldContain("IDateOnlyValueType");
+        recordSource.ShouldContain("AsDateOnly()");
+        recordSource.ShouldContain("Value != default");
+        recordSource.ShouldContain("static bool TryParse");
+        recordSource.ShouldContain("IParsable<BirthDate>");
+
+        var converterSource = generated.FirstOrDefault(s => s.Contains("class BirthDateJsonConverter"));
+        converterSource.ShouldNotBeNull();
+        converterSource.ShouldContain("yyyy-MM-dd");
+    }
+
+    [Fact]
+    public void DateTimeValue_GeneratesRecordStruct()
+    {
+        var source = @"
+using NForza.Wolverine.ValueTypes;
+
+namespace TestApp;
+
+[DateTimeValue]
+public partial record struct CreatedAt;
+";
+        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        diagnostics.ShouldBeEmpty();
+
+        var recordSource = generated.FirstOrDefault(s => s.Contains("public partial record struct CreatedAt(DateTime Value)"));
+        recordSource.ShouldNotBeNull();
+        recordSource.ShouldContain("IDateTimeValueType");
+        recordSource.ShouldContain("AsDateTime()");
+        recordSource.ShouldContain("Value != default");
+        recordSource.ShouldContain("static bool TryParse");
+        recordSource.ShouldContain("IParsable<CreatedAt>");
+    }
+
+    [Fact]
+    public void DateTimeOffsetValue_GeneratesRecordStruct()
+    {
+        var source = @"
+using NForza.Wolverine.ValueTypes;
+
+namespace TestApp;
+
+[DateTimeOffsetValue]
+public partial record struct Timestamp;
+";
+        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        diagnostics.ShouldBeEmpty();
+
+        var recordSource = generated.FirstOrDefault(s => s.Contains("public partial record struct Timestamp(DateTimeOffset Value)"));
+        recordSource.ShouldNotBeNull();
+        recordSource.ShouldContain("IDateTimeOffsetValueType");
+        recordSource.ShouldContain("AsDateTimeOffset()");
+        recordSource.ShouldContain("Value != default");
+        recordSource.ShouldContain("static bool TryParse");
+        recordSource.ShouldContain("IParsable<Timestamp>");
+    }
+
+    [Fact]
+    public void GuidValue_GeneratesIParsable()
+    {
+        var source = @"
+using NForza.Wolverine.ValueTypes;
+
+namespace TestApp;
+
+[GuidValue]
+public partial record struct OrderId;
+";
+        var (diagnostics, generated) = GeneratorTestHelper.RunGenerator(source);
+        diagnostics.ShouldBeEmpty();
+
+        var recordSource = generated.FirstOrDefault(s => s.Contains("public partial record struct OrderId"));
+        recordSource.ShouldNotBeNull();
+        recordSource.ShouldContain("IParsable<OrderId>");
+        recordSource.ShouldContain("static OrderId Parse(string s, IFormatProvider? provider)");
+    }
 }

@@ -139,6 +139,181 @@ public class {{Name}}JsonConverter : JsonConverter<{{Name}}>
     }
 }";
 
+    private const string LongTemplate = @"#nullable enable
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+{{NamespaceDeclaration}}
+public class {{Name}}JsonConverter : JsonConverter<{{Name}}>
+{
+    public override {{Name}} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+            return default;
+
+        long number;
+
+        if (reader.TokenType == JsonTokenType.Number)
+        {
+            if (!reader.TryGetInt64(out number))
+                throw new JsonException($""Number is outside Int64 range for {{Name}}."");
+        }
+        else if (reader.TokenType == JsonTokenType.String)
+        {
+            var raw = reader.GetString();
+            if (!long.TryParse(raw, out number))
+                throw new JsonException($""'{raw}' is not a valid long for {{Name}}."");
+        }
+        else
+        {
+            throw new JsonException($""Expected number or numeric string, found {reader.TokenType}."");
+        }
+
+        return new {{Name}}(number);
+    }
+
+    public override void Write(Utf8JsonWriter writer, {{Name}} value, JsonSerializerOptions options)
+    {
+        writer.WriteNumberValue(value.Value);
+    }
+}";
+
+    private const string DecimalTemplate = @"#nullable enable
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+{{NamespaceDeclaration}}
+public class {{Name}}JsonConverter : JsonConverter<{{Name}}>
+{
+    public override {{Name}} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+            return default;
+
+        decimal number;
+
+        if (reader.TokenType == JsonTokenType.Number)
+        {
+            if (!reader.TryGetDecimal(out number))
+                throw new JsonException($""Number cannot be read as decimal for {{Name}}."");
+        }
+        else if (reader.TokenType == JsonTokenType.String)
+        {
+            var raw = reader.GetString();
+            if (!decimal.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out number))
+                throw new JsonException($""'{raw}' is not a valid decimal for {{Name}}."");
+        }
+        else
+        {
+            throw new JsonException($""Expected number or numeric string, found {reader.TokenType}."");
+        }
+
+        return new {{Name}}(number);
+    }
+
+    public override void Write(Utf8JsonWriter writer, {{Name}} value, JsonSerializerOptions options)
+    {
+        writer.WriteNumberValue(value.Value);
+    }
+}";
+
+    private const string DateOnlyTemplate = @"#nullable enable
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+{{NamespaceDeclaration}}
+public class {{Name}}JsonConverter : JsonConverter<{{Name}}>
+{
+    public override {{Name}} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+            return default;
+
+        if (reader.TokenType != JsonTokenType.String)
+            throw new JsonException($""Expected string, found {reader.TokenType}."");
+
+        var raw = reader.GetString();
+        if (!DateOnly.TryParse(raw, out var value))
+            throw new JsonException($""'{raw}' is not a valid date for {{Name}}."");
+
+        return new {{Name}}(value);
+    }
+
+    public override void Write(Utf8JsonWriter writer, {{Name}} value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.Value.ToString(""yyyy-MM-dd""));
+    }
+}";
+
+    private const string DateTimeTemplate = @"#nullable enable
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+{{NamespaceDeclaration}}
+public class {{Name}}JsonConverter : JsonConverter<{{Name}}>
+{
+    public override {{Name}} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+            return default;
+
+        if (reader.TokenType != JsonTokenType.String)
+            throw new JsonException($""Expected string, found {reader.TokenType}."");
+
+        try
+        {
+            return new {{Name}}(reader.GetDateTime());
+        }
+        catch (FormatException)
+        {
+            var raw = reader.GetString();
+            throw new JsonException($""'{raw}' is not a valid DateTime for {{Name}}."");
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, {{Name}} value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.Value);
+    }
+}";
+
+    private const string DateTimeOffsetTemplate = @"#nullable enable
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+{{NamespaceDeclaration}}
+public class {{Name}}JsonConverter : JsonConverter<{{Name}}>
+{
+    public override {{Name}} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+            return default;
+
+        if (reader.TokenType != JsonTokenType.String)
+            throw new JsonException($""Expected string, found {reader.TokenType}."");
+
+        try
+        {
+            return new {{Name}}(reader.GetDateTimeOffset());
+        }
+        catch (FormatException)
+        {
+            var raw = reader.GetString();
+            throw new JsonException($""'{raw}' is not a valid DateTimeOffset for {{Name}}."");
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, {{Name}} value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.Value);
+    }
+}";
+
     public static string GenerateGuid(ValueTypeInfo info)
     {
         return TemplateEngine.Render(GuidTemplate, CreateValues(info));
@@ -157,6 +332,31 @@ public class {{Name}}JsonConverter : JsonConverter<{{Name}}>
     public static string GenerateDouble(ValueTypeInfo info)
     {
         return TemplateEngine.Render(DoubleTemplate, CreateValues(info));
+    }
+
+    public static string GenerateLong(ValueTypeInfo info)
+    {
+        return TemplateEngine.Render(LongTemplate, CreateValues(info));
+    }
+
+    public static string GenerateDecimal(ValueTypeInfo info)
+    {
+        return TemplateEngine.Render(DecimalTemplate, CreateValues(info));
+    }
+
+    public static string GenerateDateOnly(ValueTypeInfo info)
+    {
+        return TemplateEngine.Render(DateOnlyTemplate, CreateValues(info));
+    }
+
+    public static string GenerateDateTime(ValueTypeInfo info)
+    {
+        return TemplateEngine.Render(DateTimeTemplate, CreateValues(info));
+    }
+
+    public static string GenerateDateTimeOffset(ValueTypeInfo info)
+    {
+        return TemplateEngine.Render(DateTimeOffsetTemplate, CreateValues(info));
     }
 
     private static Dictionary<string, string> CreateValues(ValueTypeInfo info)
