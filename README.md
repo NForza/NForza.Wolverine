@@ -251,7 +251,7 @@ Supported backing types: `Guid` (`[GuidValue]`), `string` (`[StringValue]`), `in
 
 When `Microsoft.AspNetCore.OpenApi` is referenced, a `WolverineValueTypeOpenApiTransformer` is also generated to map value types to their backing type schemas in OpenAPI docs.
 
-The generator includes an analyzer diagnostic **WVTN001** that warns on `default(ValueType)` usage, since default-constructed value types are invalid.
+The generator includes an analyzer diagnostic **NFW001** that warns on `default(ValueType)` usage, since default-constructed value types are invalid.
 
 ## Infrastructure
 

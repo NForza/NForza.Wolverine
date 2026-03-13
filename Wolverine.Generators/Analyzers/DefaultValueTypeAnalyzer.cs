@@ -10,7 +10,7 @@ namespace NForza.Wolverine.Generators.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class DefaultValueTypeAnalyzer : DiagnosticAnalyzer
 {
-    public const string DiagnosticId = "WVTN001";
+    public const string DiagnosticId = "NFW001";
 
     private static readonly DiagnosticDescriptor Rule = new(
         DiagnosticId,
