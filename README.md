@@ -1,8 +1,61 @@
-# Wolverine Event-Sourced Issues API
+# NForza.Wolverine.Generators
 
-A reference implementation demonstrating event sourcing, CQRS, and real-time UI updates using the [Wolverine](https://wolverine.netlify.app/) framework with [Marten](https://martendb.io/) for event storage, [RabbitMQ](https://www.rabbitmq.com/) for messaging, and an [Angular](https://angular.dev/) frontend connected via [SignalR](https://learn.microsoft.com/aspnet/core/signalr/).
+A C# [Roslyn source generator](https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview) for [Wolverine](https://wolverine.netlify.app/) and [Marten](https://martendb.io/) projects that eliminates boilerplate by generating strongly-typed value types and [SignalR](https://learn.microsoft.com/aspnet/core/signalr/) infrastructure from simple declarations.
 
-## Architecture Overview
+## Value Types
+
+Turn a one-line declaration into a full record struct with JSON serialization, `TryParse`, `IParsable<T>` (on .NET 7+), comparison operators, and Marten extension methods:
+
+```csharp
+[GuidValue]
+public partial record struct IssueId;
+```
+
+Supported backing types: `Guid` (`[GuidValue]`), `string` (`[StringValue]`), `int` (`[IntValue]`), `double` (`[DoubleValue]`), `long` (`[LongValue]`), `decimal` (`[DecimalValue]`), `DateOnly` (`[DateOnlyValue]`), `DateTime` (`[DateTimeValue]`), `DateTimeOffset` (`[DateTimeOffsetValue]`).
+
+A `WolverineValueTypeExtension` is auto-generated to register all JSON converters with Wolverine's serializer.
+
+When `Microsoft.AspNetCore.OpenApi` is referenced, a `WolverineValueTypeOpenApiTransformer` is also generated to map value types to their backing type schemas in OpenAPI docs.
+
+The generator includes an analyzer diagnostic **NFW001** that warns on `default(ValueType)` usage, since default-constructed value types are invalid.
+
+## SignalR Hub Generation
+
+Declare events in a `WolverineHub` DSL and get a complete SignalR pipeline generated at compile time:
+
+```csharp
+internal class IssuesHub : WolverineHub
+{
+    public IssuesHub()
+    {
+        UsePath("/hub/issues");
+        Broadcast<IssueCreated>();
+        SendToGroup<IssueAssigned>(e => e.IssueId);
+        SendToGroup<IssueClosed>(e => e.IssueId);
+    }
+}
+```
+
+The source generator produces three artifacts:
+- **Hub class** with typed `SubscribeTo{Entity}` / `UnsubscribeFrom{Entity}` methods (group names are prefixed, e.g. `IssueId:{id}`, to prevent collisions across keys)
+- **Bridge class** — Wolverine handlers that forward events to `Clients.All` or `Clients.Group`
+- **Registration extension** — `MapHub<T>` call wired into `IEndpointRouteBuilder`
+
+## Angular Client Generation
+
+When combined with [Reinforced.Typings](https://github.com/nicknaso/nicknaso.github.io), the same `WolverineHub` subclass also generates a fully typed Angular SignalR service at build time:
+
+- **Per-event Angular signals** (`issueCreated`, `issueAssigned`, etc.) and an aggregated `allEvents` signal
+- **Group subscriptions** — `subscribeToIssue(issueId)` / `unsubscribeFromIssue(issueId)` derived from the `GroupKeyProperty`
+- **Auto-reconnect** with automatic resubscription to all tracked groups
+
+---
+
+## Example Application
+
+The repo includes a full event-sourced Issues API as a reference implementation, using [RabbitMQ](https://www.rabbitmq.com/) for messaging and an [Angular](https://angular.dev/) frontend connected via SignalR.
+
+### Architecture Overview
 
 ```
                          +-----------------+
@@ -45,12 +98,13 @@ A reference implementation demonstrating event sourcing, CQRS, and real-time UI 
 | Project | Description |
 |---|---|
 | `IssuesAPI/IssuesAPI` | Main API with command endpoints, event sourcing, SignalR hub |
-| `IssuesAPI/IssuesAPI.Contracts` | Shared events, commands, and value types. Generates TypeScript via Reinforced.Typings |
+| `IssuesAPI/IssuesAPI.Contracts` | Shared events, commands, and value types |
+| `IssuesAPI/IssuesAPI.TypeScriptGeneration` | Build-time TypeScript generation via Reinforced.Typings |
 | `IssuesAPI/IssuesAPI.Tests` | Integration tests using Alba and Wolverine message tracking |
 | `IssuesAPI.Reporting/IssuesAPI.Reporting` | Reporting service with RabbitMQ consumers and query endpoints |
 | `IssuesAPI.Reporting/IssuesAPI.Reporting.Tests` | Integration tests for handlers and endpoints |
 | `Wolverine.ValueTypes/src` | Attributes and interfaces for strongly-typed value types |
-| `Wolverine.ValueTypes/Generators` | C# source generator for value type record structs |
+| `Wolverine.Generators` | C# source generator for value types, SignalR hubs, bridges, and registration |
 | `Wolverine.ValueTypes/Tests` | Source generator output verification tests |
 | `Issues.UI` | Angular 21 SPA with SignalR real-time event display |
 
@@ -209,49 +263,9 @@ The write side (IssuesAPI) and read side (Reporting) are separate services with 
 
 ### Real-Time Updates via SignalR
 
-Events flow from the Marten outbox through RabbitMQ back into the application, where a Wolverine handler forwards them to SignalR:
+Events flow from the Marten outbox through RabbitMQ back into the application, where the generated bridge forwards them to SignalR (see [SignalR Hub Generation](#signalr-hub-generation) above). With `UseConventionalRouting()`, Wolverine automatically creates exchanges per message type and a queue for the bridge — no manual wiring needed.
 
-```csharp
-public class IssueEventSignalRBridge(IHubContext<IssuesHub> hub)
-{
-    public Task Handle(IssueCreated @event) => hub.Clients.All.SendAsync(nameof(IssueCreated), @event);
-    public Task Handle(IssueAssigned @event) => hub.Clients.All.SendAsync(nameof(IssueAssigned), @event);
-    public Task Handle(IssueUnassigned @event) => hub.Clients.All.SendAsync(nameof(IssueUnassigned), @event);
-    public Task Handle(IssueClosed @event) => hub.Clients.All.SendAsync(nameof(IssueClosed), @event);
-    public Task Handle(IssueOpened @event) => hub.Clients.All.SendAsync(nameof(IssueOpened), @event);
-}
-```
-
-Each event type is sent as its own SignalR method, so the Angular client registers a handler per event. With `UseConventionalRouting()`, Wolverine automatically creates exchanges per message type and a queue for this handler — no manual wiring needed.
-
-### TypeScript Generation
-
-[Reinforced.Typings](https://github.com/nicknaso/nicknaso.github.io) generates TypeScript interfaces from the C# contracts at build time. The configuration auto-discovers all record types and value types via assembly reflection:
-
-```csharp
-// ReinforcedTypingsConfiguration.cs
-builder.SubstituteGenericInterface(typeof(IValueType), (type, resolver) =>
-    resolver.ResolveTypeName("string"));
-```
-
-Generated files land in `Issues.UI/src/app/generated/` and stay in sync with the C# contracts on every build.
-
-### Strongly-Typed Value Types
-
-The `NForza.Wolverine.ValueTypes.Generators` source generator turns simple declarations:
-
-```csharp
-[GuidValue]
-public partial record struct IssueId;
-```
-
-Into full record structs with JSON serialization, `TryParse`, `IParsable<T>` (on .NET 7+), comparison operators, and Marten-compatible extension methods. A `WolverineValueTypeExtension` is auto-generated to register all JSON converters with Wolverine's serializer.
-
-Supported backing types: `Guid` (`[GuidValue]`), `string` (`[StringValue]`), `int` (`[IntValue]`), `double` (`[DoubleValue]`), `long` (`[LongValue]`), `decimal` (`[DecimalValue]`), `DateOnly` (`[DateOnlyValue]`), `DateTime` (`[DateTimeValue]`), `DateTimeOffset` (`[DateTimeOffsetValue]`).
-
-When `Microsoft.AspNetCore.OpenApi` is referenced, a `WolverineValueTypeOpenApiTransformer` is also generated to map value types to their backing type schemas in OpenAPI docs.
-
-The generator includes an analyzer diagnostic **NFW001** that warns on `default(ValueType)` usage, since default-constructed value types are invalid.
+The Angular frontend uses the generated `IssuesHubService` (see [Angular Client Generation](#angular-client-generation) above). Generated files land in `Issues.UI/src/app/generated/` and stay in sync with the C# contracts on every build. During development, Angular's proxy config routes `/hub/*` to the API at `http://localhost:5035` with WebSocket support.
 
 ## Infrastructure
 
