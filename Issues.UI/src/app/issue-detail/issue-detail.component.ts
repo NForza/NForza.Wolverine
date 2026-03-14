@@ -48,6 +48,11 @@ import { Issue } from '../models/api.models';
               Assign
             </button>
           </div>
+          @if (issue.assigneeId) {
+            <button class="btn btn-danger" [disabled]="actionInProgress()" (click)="unassign()">
+              Unassign
+            </button>
+          }
           <button class="btn btn-secondary" [disabled]="actionInProgress()" (click)="close()">
             Close Issue
           </button>
@@ -76,6 +81,9 @@ import { Issue } from '../models/api.models';
     .actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
     .assign-form { display: flex; gap: .5rem; align-items: center; }
     .input { padding: .4rem .6rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: .9rem; }
+    .btn-danger { background: #dc2626; color: white; border-color: #dc2626; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-danger:disabled { opacity: .5; cursor: not-allowed; }
   `,
 })
 export class IssueDetailComponent implements OnInit, OnDestroy {
@@ -129,6 +137,22 @@ export class IssueDetailComponent implements OnInit, OnDestroy {
         this.actionInProgress.set(false);
         this.actionError.set('Failed to assign issue.');
         console.error('Assign failed:', err);
+      },
+    });
+  }
+
+  unassign(): void {
+    this.actionInProgress.set(true);
+    this.actionError.set(null);
+    this.api.unassignIssue(this.issueId).subscribe({
+      next: () => {
+        this.actionInProgress.set(false);
+        this.loadIssue();
+      },
+      error: (err) => {
+        this.actionInProgress.set(false);
+        this.actionError.set('Failed to unassign issue.');
+        console.error('Unassign failed:', err);
       },
     });
   }

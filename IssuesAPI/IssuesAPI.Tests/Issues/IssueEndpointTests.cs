@@ -183,6 +183,67 @@ public class IssueEndpointTests(AppFixture fixture) : IntegrationContext(fixture
     }
 
     [Fact]
+    public async Task should_unassign_an_issue()
+    {
+        var originator = await CreateUser("Jack", "jack@example.com");
+        var assignee = await CreateUser("Karen", "karen@example.com");
+
+        var (_, createResult) = await TrackedHttpCall(x =>
+        {
+            x.Post.Json(new CreateIssue(originator.Id, "Unassign me", "Will be unassigned"))
+                .ToUrl("/issues");
+        });
+
+        var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
+
+        await TrackedHttpCall(x =>
+        {
+            x.Put.Json(new AssignIssue(created.Id, assignee.Id))
+                .ToUrl($"/issues/{created.Id}/assign");
+            x.StatusCodeShouldBe(204);
+        });
+
+        await TrackedHttpCall(x =>
+        {
+            x.Put.Json(new UnassignIssue(created.Id))
+                .ToUrl($"/issues/{created.Id}/unassign");
+            x.StatusCodeShouldBe(204);
+        });
+
+        await using var session = Store.QuerySession();
+        var issue = await session.Events.AggregateStreamAsync<Issue>(created.Id);
+        issue.ShouldNotBeNull();
+        issue.AssigneeId.ShouldBeNull();
+
+        var events = await session.Events.FetchStreamAsync(created.Id);
+        events.Count.ShouldBe(3);
+        events[0].Data.ShouldBeOfType<IssueCreated>();
+        events[1].Data.ShouldBeOfType<IssueAssigned>();
+        events[2].Data.ShouldBeOfType<IssueUnassigned>();
+    }
+
+    [Fact]
+    public async Task should_fail_to_unassign_when_not_assigned()
+    {
+        var originator = await CreateUser("Leo", "leo@example.com");
+
+        var (_, createResult) = await TrackedHttpCall(x =>
+        {
+            x.Post.Json(new CreateIssue(originator.Id, "Not assigned", "Cannot unassign"))
+                .ToUrl("/issues");
+        });
+
+        var created = createResult.ReadAsJson<IssueCreatedResponse>()!;
+
+        await Scenario(x =>
+        {
+            x.Put.Json(new UnassignIssue(created.Id))
+                .ToUrl($"/issues/{created.Id}/unassign");
+            x.StatusCodeShouldBe(400);
+        });
+    }
+
+    [Fact]
     public async Task should_close_an_issue()
     {
         var originator = await CreateUser("Grace", "grace@example.com");

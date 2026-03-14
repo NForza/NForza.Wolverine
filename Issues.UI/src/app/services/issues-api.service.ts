@@ -33,6 +33,10 @@ export class IssuesApiService {
     } as AssignIssueRequest);
   }
 
+  unassignIssue(issueId: string): Observable<void> {
+    return this.http.put<void>(`/api/issues/${issueId}/unassign`, { issueId });
+  }
+
   closeIssue(issueId: string): Observable<void> {
     return this.http.put<void>(`/api/issues/${issueId}/close`, { issueId });
   }
