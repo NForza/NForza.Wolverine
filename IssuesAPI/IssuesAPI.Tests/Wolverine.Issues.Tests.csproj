@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Alba" Version="8.4.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.11.0" />
     <PackageReference Include="coverlet.collector" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

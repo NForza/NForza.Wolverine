@@ -10,4 +10,5 @@
   <Project Path="IssuesAPI/IssuesAPI.TypeScriptGeneration/Wolverine.Issues.TypeScriptGeneration.csproj" />
   <Project Path="IssuesAPI.Reporting/IssuesAPI.Reporting/Wolverine.Reporting.csproj" />
   <Project Path="IssuesAPI.Reporting/IssuesAPI.Reporting.Tests/Wolverine.Reporting.Tests.csproj" />
+  <Project Path="docker-compose.dcproj" />
 </Solution>

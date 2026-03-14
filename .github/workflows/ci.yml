@@ -13,20 +13,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,13 +40,9 @@ jobs:
 
       - name: Run API integration tests
         run: dotnet test IssuesAPI/IssuesAPI.Tests/Wolverine.Issues.Tests.csproj --configuration Release --no-build
-        env:
-          ConnectionStrings__Marten: "Host=localhost;Port=5432;Database=issues_test;Username=postgres;Password=postgres"
 
       - name: Run reporting tests
         run: dotnet test IssuesAPI.Reporting/IssuesAPI.Reporting.Tests/Wolverine.Reporting.Tests.csproj --configuration Release --no-build
-        env:
-          ConnectionStrings__Marten: "Host=localhost;Port=5432;Database=reporting_test;Username=postgres;Password=postgres"
 
       - name: Pack NuGet
         run: dotnet pack Wolverine.Generators/NForza.Wolverine.Generators.csproj --configuration Release --no-build --output ./nupkg
