@@ -34,16 +34,16 @@ jobs:
           echo "Publishing version: $VERSION"
 
       - name: Restore
-        run: dotnet restore Wolverine.ValueTypes/Wolverine.ValueTypes.slnx
+        run: dotnet restore Wolverine.slnx
 
       - name: Build
-        run: dotnet build Wolverine.ValueTypes/Wolverine.ValueTypes.slnx --configuration Release --no-restore -p:Version=${{ steps.version.outputs.VERSION }}
+        run: dotnet build Wolverine.slnx --configuration Release --no-restore -p:Version=${{ steps.version.outputs.VERSION }}
 
-      - name: Run unit tests
-        run: dotnet test Wolverine.ValueTypes/test/NForza.Wolverine.ValueTypes.Tests --configuration Release --no-build
+      - name: Run generator tests
+        run: dotnet test Wolverine.ValueTypes/Tests/NForza.Wolverine.ValueTypes.Tests.csproj --configuration Release --no-build
 
       - name: Pack
-        run: dotnet pack Wolverine.ValueTypes/src/NForza.Wolverine.ValueTypes.Generators --configuration Release --no-build -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkg
+        run: dotnet pack Wolverine.Generators/NForza.Wolverine.Generators.csproj --configuration Release --no-build -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkg
 
       - name: Verify package contents
         run: |
