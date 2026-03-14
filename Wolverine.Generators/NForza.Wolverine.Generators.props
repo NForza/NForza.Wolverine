@@ -1,0 +1,9 @@
+<Project>
+  <ItemGroup>
+    <_NforzaGeneratorAssembly Include="$(MSBuildThisFileDirectory)..\analyzers\dotnet\cs\NForza.Wolverine.Generators.dll" />
+  </ItemGroup>
+  <PropertyGroup>
+    <!-- Prevent the generator package from flowing to downstream consumers -->
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+</Project>

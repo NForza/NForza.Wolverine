@@ -22,11 +22,52 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore
-        run: dotnet restore Wolverine.ValueTypes/Wolverine.ValueTypes.slnx
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: Issues.UI/package-lock.json
 
-      - name: Build
-        run: dotnet build Wolverine.ValueTypes/Wolverine.ValueTypes.slnx --configuration Release --no-restore
+      - name: Restore .NET
+        run: dotnet restore Wolverine.slnx
 
-      - name: Run tests
-        run: dotnet test Wolverine.ValueTypes/Wolverine.ValueTypes.slnx --configuration Release --no-build
+      - name: Build .NET
+        run: dotnet build Wolverine.slnx --configuration Release --no-restore
+
+      - name: Run generator tests
+        run: dotnet test Wolverine.ValueTypes/Tests/NForza.Wolverine.ValueTypes.Tests.csproj --configuration Release --no-build
+
+      - name: Run API integration tests
+        run: dotnet test IssuesAPI/IssuesAPI.Tests/Wolverine.Issues.Tests.csproj --configuration Release --no-build
+
+      - name: Run reporting tests
+        run: dotnet test IssuesAPI.Reporting/IssuesAPI.Reporting.Tests/Wolverine.Reporting.Tests.csproj --configuration Release --no-build
+
+      - name: Pack NuGet
+        run: dotnet pack Wolverine.Generators/NForza.Wolverine.Generators.csproj --configuration Release --no-build --output ./nupkg
+
+      - name: Verify NuGet package
+        run: |
+          for pkg in ./nupkg/*.nupkg; do
+            echo "=== $pkg ==="
+            unzip -l "$pkg"
+          done
+
+      - name: Install Angular dependencies
+        working-directory: Issues.UI
+        run: npm ci
+
+      - name: Build Angular app
+        working-directory: Issues.UI
+        run: npx ng build
+
+      - name: Run Angular tests
+        working-directory: Issues.UI
+        run: npx ng test --watch=false
+
+      - name: Upload NuGet artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: ./nupkg/*.nupkg

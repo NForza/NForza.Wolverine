@@ -5,5 +5,19 @@
     "ws": true,
     "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/api": {
+    "target": "http://localhost:5035",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": { "^/api": "" },
+    "logLevel": "debug"
+  },
+  "/reporting": {
+    "target": "http://localhost:5036",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": { "^/reporting": "" },
+    "logLevel": "debug"
   }
 }
